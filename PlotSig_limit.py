@@ -25,10 +25,16 @@ parser.add_argument(
     default="bern2",
     help="Which bkg model")
 parser.add_argument(
+    "--cat",
+    action="store",
+    dest="cat",
+    default="gg",
+    help="Which category")
+parser.add_argument(
     "--expectedSig",
     action="store",
     dest="exSig",
-    default=0.006,
+    default=0.0059,
     help="Expected Signal Strength")
 
 args = parser.parse_args()
@@ -177,9 +183,15 @@ maxI = [-1,-1,-1]
 maxSigI = -1
 fResults = open('ScanResult_'+args.bkg+'_'+str(args.exSig)+'corrected.txt', 'w')
 
-#read in the csv files to pd for quick systematics calculations
-df_gg_full, df_vbf_full = pd.read_csv('GG_GGcat.csv'), pd.read_csv('VBF_GGcat.csv')
-
+#read the csv files to pd for quick systematics calculations as well as root files where ws for signal/data is saved
+if args.cat=='gg':
+  df_gg_full, df_vbf_full = pd.read_csv('GG_GGcat.csv'), pd.read_csv('VBF_GGcat.csv')
+  file_gg_full, file_vbf_full = TFile('GG_GGcat.root'), TFile('VBF_GGcat.root')
+  file_data_full = TFile('GGcat.root')
+else:
+  df_gg_full, df_vbf_full = pd.read_csv('GG_VBFcat.csv'), pd.read_csv('VBF_VBFcat.csv')
+  file_gg_full, file_vbf_full = TFile('GG_VBFcat.root'), TFile('VBF_VBFcat.root')
+  file_data_full = TFile('VBFcat.root')
 #cats = [0, 40, 50, 100] so 1st cat is from 0 to 40, 2nd cat is 40 to 50...etc
 #i is which percentile you scanning
 #if i hit a boundry, raise exception 
@@ -203,7 +215,7 @@ def SigScan(i):
   fitstatus = 0
 
   for c in range(len(cats)):
-    fitstatus = fit(args.bkg, ranges[c], 'ggcat%i_%i'%(c,i))
+    fitstatus = fit(file_data_full, file_gg_full, file_vbf_full, args.bkg, ranges[c], 'ggcat%i_%i'%(c,i))
     catname.append('ggcat%i_%i'%(c,i))
     combinestr += 'Name%i=Datacards/datacard_ggcat%i_%i.txt '%(c+1,c,i)
   writedatacard(catname, ranges, df_gg_full, df_vbf_full)

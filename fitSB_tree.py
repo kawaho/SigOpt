@@ -3,15 +3,14 @@ import math
 ROOT.gSystem.Load("/afs/cern.ch/work/k/kaho/CMSSW_10_2_13/lib/slc7_amd64_gcc700/libHiggsAnalysisCombinedLimit.so");
 ROOT.gROOT.SetBatch(True)
 #bins_proj = [effl, effh]
-def fit(bkg, bins, cat, saveData=True, sys_=True):
+def fit(datafile, ggfile, vbffile, bkg, bins, cat, saveData=True, sys_=True):
   effl, effh = bins[0], bins[1]
   allvars = []
   fitstatus = 0
   w = ROOT.RooWorkspace("w_13TeV","w_13TeV") 
 
   #Fit data
-  rfile = ROOT.TFile('dataws.root')
-  inWS = rfile.Get("CMS_emu_workspace")
+  inWS = datafile.Get("CMS_emu_workspace")
   mass = inWS.var("CMS_emu_Mass")
   if saveData:
     mass.setBins(50)
@@ -73,7 +72,8 @@ def fit(bkg, bins, cat, saveData=True, sys_=True):
   yrs = ['2016','2017','2018']
   
   #Fit signal
-  for rfile, proc in zip([ROOT.TFile('GG_proj.root'),ROOT.TFile('VBF_proj.root')],['ggH','qqH']):
+  for rfile, proc in zip([ggfile, vbffile],['ggH','qqH']):
+    inWS = rfile.Get("CMS_emu_workspace")
     dh = inWS.data("norm_range%i"%effl)
     for i in range(effl+1, effh):
       dh.append(inWS.data("norm_range%i"%i))
