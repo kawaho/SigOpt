@@ -13,9 +13,9 @@ def make2side(sysname):
 
 def calmigration(df):
   #list of all systematics
-  jetUnc = ['jesAbsolute', 'jesBBEC1', 'jesFlavorQCD', 'jesEC2', 'jesHF', 'jesRelativeBal']
-  jetyearUnc = sum([[f'jer_{year}', f'jesAbsolute_{year}', f'jesBBEC1_{year}', f'jesEC2_{year}', f'jesHF_{year}', f'jesRelativeSample_{year}', f'UnclusteredEn_{year}'] for year in ['2017', '2018', '2016preVFP', '2016postVFP']], [])
-  sfUnc = sum([[f'pu_{year}', f'bTag_{year}'] for year in ['2017', '2018', '2016preVFP', '2016postVFP']], [])
+  jetUnc = ['jesAbsolute', 'jesBBEC1', 'jesFlavorQCD', 'jesEC2', 'jesHF', 'jesRelativeBal', 'UnclusteredEn']
+  jetyearUnc = sum([['jer_'+year, 'jesAbsolute_'+year, 'jesBBEC1_'+year, 'jesEC2_'+year, 'jesHF_'+year, 'jesRelativeSample_'+year] for year in ['2017', '2018', '2016']], [])
+  sfUnc = sum([['pu_'+year, 'bTag_'+year] for year in ['2017', '2018', '2016preVFP', '2016postVFP']], [])
   sfUnc += ['pf_2016preVFP', 'pf_2016postVFP', 'pf_2017']
   leptonUnc = ['me']#['ees', 'eer', 'me']
   sys = jetUnc+jetyearUnc+sfUnc+leptonUnc

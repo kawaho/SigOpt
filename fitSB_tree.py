@@ -1,6 +1,7 @@
 import ROOT
 import math
-ROOT.gSystem.Load("/afs/cern.ch/work/k/kaho/CMSSW_10_2_13/lib/slc7_amd64_gcc700/libHiggsAnalysisCombinedLimit.so");
+ROOT.gSystem.Load("/afs/crc.nd.edu/user/k/kho2/CMSSW_10_2_13/lib/slc7_amd64_gcc700/libHiggsAnalysisCombinedLimit.so")
+#ROOT.gSystem.Load("/afs/cern.ch/work/k/kaho/CMSSW_10_2_13/lib/slc7_amd64_gcc700/libHiggsAnalysisCombinedLimit.so")
 ROOT.gROOT.SetBatch(True)
 #bins_proj = [effl, effh]
 def fit(datafile, ggfile, vbffile, bkg, bins, cat, saveData=True, sys_=True):
@@ -10,10 +11,12 @@ def fit(datafile, ggfile, vbffile, bkg, bins, cat, saveData=True, sys_=True):
   w = ROOT.RooWorkspace("w_13TeV","w_13TeV") 
 
   #Fit data
+  print('Hello1')
   inWS = datafile.Get("CMS_emu_workspace")
+  print('Hello2')
   mass = inWS.var("CMS_emu_Mass")
-  if saveData:
-    mass.setBins(50)
+  #if saveData:
+  #  mass.setBins(50)
   mass.setRange("higgsRange",110.,140.)
   mass.setRange("higgsRange2",110.,160.)
   db = inWS.data("data_norm_range%i"%effl)
@@ -68,9 +71,7 @@ def fit(datafile, ggfile, vbffile, bkg, bins, cat, saveData=True, sys_=True):
 #  f = open('Hem_shape_sys.csv', 'a')
 #  if os.stat("Hem_shape_sys.csv").st_size == 0:
 #    f.write("Proc,Cat,Sys,Param,Value\n")
-  sysname = ["ees_Up", "ees_Down", "eer_Up", "eer_Down", "me_Up", "me_Down"]
-  yrs = ['2016','2017','2018']
-  
+  sysname = ["me_Up", "me_Down"] #"ees_Up", "ees_Down", "eer_Up", "eer_Down", "me_Up", "me_Down"]
   #Fit signal
   for rfile, proc in zip([ggfile, vbffile],['ggH','qqH']):
     inWS = rfile.Get("CMS_emu_workspace")
@@ -225,7 +226,7 @@ def fit(datafile, ggfile, vbffile, bkg, bins, cat, saveData=True, sys_=True):
 
 #Fit Systematics
     for sys in sysname:
-      dh = inWS.data("norm_range%i"%effl)
+      dh = inWS.data("{}_range{}".format(sys,effl))
       for i in range(effl+1, effh):
         dh.append(inWS.data("{}_range{}".format(sys,i)))
 

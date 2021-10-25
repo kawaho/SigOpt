@@ -1,17 +1,11 @@
-import os
-import time
+import os, time, sys, glob, math, array, argparse
 from ROOT import TLatex, gROOT, gPad, TFile, TH1F, TH2F, TGraph, TCanvas, TLine, gPad, TMultiGraph, TPaveText
 from writedatacard import writedatacard
 from fitSB_tree import fit
-import sys
-import glob
-import math
-import array 
 import numpy as np
 import pandas as pd
 import random as rd
 from multiprocessing import Pool, cpu_count
-import argparse
 parser = argparse.ArgumentParser(
     "Optimizer for LFV H analysis")
 parser.add_argument(
@@ -169,10 +163,9 @@ def Initialize(lis_):
   for  i in range(len(lis_)):
     lis_[i] = 0
 
-#print "Hello",SigStep
 run = True
 #run = 1
-cats = [0,100]
+cats = [1,101]
 catsSig = []
 catdiff = []
 
@@ -185,14 +178,14 @@ fResults = open('ScanResult_'+args.bkg+'_'+str(args.exSig)+'corrected.txt', 'w')
 
 #read the csv files to pd for quick systematics calculations as well as root files where ws for signal/data is saved
 if args.cat=='gg':
-  df_gg_full, df_vbf_full = pd.read_csv('GG_GGcat.csv'), pd.read_csv('VBF_GGcat.csv')
-  file_gg_full, file_vbf_full = TFile('GG_GGcat.root'), TFile('VBF_GGcat.root')
-  file_data_full = TFile('GGcat.root')
+  df_gg_full, df_vbf_full = pd.read_csv('inputs/GG_GGcat.csv', index_col='quantiles'), pd.read_csv('inputs/VBF_GGcat.csv', index_col='quantiles')
+  file_gg_full, file_vbf_full = TFile('inputs/GG_GGcat.root'), TFile('inputs/VBF_GGcat.root')
+  file_data_full = TFile('inputs/GGcat.root')
 else:
-  df_gg_full, df_vbf_full = pd.read_csv('GG_VBFcat.csv'), pd.read_csv('VBF_VBFcat.csv')
-  file_gg_full, file_vbf_full = TFile('GG_VBFcat.root'), TFile('VBF_VBFcat.root')
-  file_data_full = TFile('VBFcat.root')
-#cats = [0, 40, 50, 100] so 1st cat is from 0 to 40, 2nd cat is 40 to 50...etc
+  df_gg_full, df_vbf_full = pd.read_csv('inputs/GG_VBFcat.csv', index_col='quantiles'), pd.read_csv('inputs/VBF_VBFcat.csv', index_col='quantiles')
+  file_gg_full, file_vbf_full = TFile('inputs/GG_VBFcat.root'), TFile('inputs/VBF_VBFcat.root')
+  file_data_full = TFile('inputs/VBFcat.root')
+#cats = [1, 40, 50, 100] so 1st cat is from 1 to 40, 2nd cat is 40 to 50...etc
 #i is which percentile you scanning
 #if i hit a boundry, raise exception 
 def SigScan(i):
@@ -215,19 +208,15 @@ def SigScan(i):
   fitstatus = 0
 
   for c in range(len(cats)):
-    fitstatus = fit(file_data_full, file_gg_full, file_vbf_full, args.bkg, ranges[c], 'ggcat%i_%i'%(c,i))
-    catname.append('ggcat%i_%i'%(c,i))
-    combinestr += 'Name%i=Datacards/datacard_ggcat%i_%i.txt '%(c+1,c,i)
+    fitstatus = fit(file_data_full, file_gg_full, file_vbf_full, args.bkg, ranges[c], '%scat%i_%i'%(args.cat,c,i))
+    catname.append('%scat%i_%i'%(args.cat,c,i))
+    combinestr += 'Name%i=Datacards/datacard_%scat%i_%i.txt '%(c+1,args.cat,c,i)
   writedatacard(catname, ranges, df_gg_full, df_vbf_full)
 #  if fitstatus != 0:
 #    return -1
 
 ### Atlas Limit: 6.2*10^{-5} (5.9*10^{-5}).
   runCMD("combineCards.py " + combinestr + "> Datacards/datacard_comb_%i.txt"%i)
-  #runCMD("combine -M Significance Datacards/datacard_ggcat0_%i.txt -m 125 -t -1 --expectSignal=0.006 --name %i"%(i,i))
-  #runCMD("combine -M Significance Datacards/datacard_ggcat1_%i.txt -m 125 -t -1 --expectSignal=0.006 --name %i"%(i,i))
-#  runCMD("combine -M AsymptoticLimits -m 125 Datacards/datacard_comb_%i.txt --name %i"%(i,i))
-  #runCMD("combine -M Significance Datacards/datacard_comb_%i.txt -m 125 --name %i"%(i,i))
   lim = 0.6
   if args.limit:
     runCMD("combine -M AsymptoticLimits -m 125 Datacards/datacard_comb_%i.txt --run blind --name %i"%(i,i))
@@ -249,7 +238,7 @@ while run:
   Sigx, Sigy, Limy = array.array('f'), array.array('f'), array.array('f')
   Sigx_plot, Sigy_plot, Limy_plot = array.array('f'), array.array('f'), array.array('f')
   pool = Pool(processes=cpu_count())
-  Comb = pool.map(SigScan, range(1,100)) 
+  Comb = pool.map(SigScan, range(1,101)) 
   fResults.write("%s\n"%str(Comb))
   for i in range(len(Comb)):
     if Comb[i] == -1: 
@@ -276,8 +265,8 @@ while run:
   maxComb_idx = np.argmax(Sigy)
   maxComb = np.max(Sigy)
 
-  diff = abs((maxComb - maxCombprev)/maxCombprev)
-  if diff >= 0.005:
+  diff = (maxComb - maxCombprev)/maxCombprev
+  if diff >= 0.01:
     catdiff.append(diff)
     cats.append(maxComb_idx)
     cats.sort()

@@ -7,51 +7,45 @@ procs = ['GGLFV', 'VBFLFV', 'bkg', 'data_obs']
 datacard = []
 ws = []
 CMSnames = {
-'jetAbsolute': 'CMS_scale_j_Absolute',
-'jetAbsolute_2016preVFP': 'CMS_scale_j_Absolute_2016preVFP',
-'jetAbsolute_2016postVFP': 'CMS_scale_j_Absolute_2016postVFP',
-'jetAbsolute_2017': 'CMS_scale_j_Absolute_2017',
-'jetAbsolute_2018': 'CMS_scale_j_Absolute_2018',
-'jetBBEC1': 'CMS_scale_j_BBEC1',
-'jetBBEC1_2016preVFP': 'CMS_scale_j_BBEC1_2016preVFP',
-'jetBBEC1_2016postVFP': 'CMS_scale_j_BBEC1_2016postVFP',
-'jetBBEC1_2017': 'CMS_scale_j_BBEC1_2017',
-'jetBBEC1_2018': 'CMS_scale_j_BBEC1_2018',
-'jetEC2': 'CMS_scale_j_EC2',
-'jetEC2_2016preVFP': 'CMS_scale_j_EC2_2016preVFP', 
-'jetEC2_2016postVFP': 'CMS_scale_j_EC2_2016postVFP', 
-'jetEC2_2017': 'CMS_scale_j_EC2_2017', 
-'jetEC2_2018': 'CMS_scale_j_EC2_2018',
-'jetFlavorQCD': 'CMS_scale_j_FlavorQCD',
-'jetHF': 'CMS_scale_j_HF',
-'jetHF_2016preVFP': 'CMS_scale_j_HF_2016preVFP',
-'jetHF_2016postVFP': 'CMS_scale_j_HF_2016postVFP',
-'jetHF_2017': 'CMS_scale_j_HF_2017',
-'jetHF_2018': 'CMS_scale_j_HF_2018',
-'jetRelativeBal': 'CMS_scale_j_RelativeBal',
-'jetRelativeSample_2016': 'CMS_scale_j_RelativeSample_2016',
-'jetRelativeSample_2017': 'CMS_scale_j_RelativeSample_2017',
-'jetRelativeSample_2018': 'CMS_scale_j_RelativeSample_2018',
-'jer_2016preVFP': 'CMS_res_j_2016preVFP',
-'jer_2016postVFP': 'CMS_res_j_2016postVFP',
+'jesAbsolute': 'CMS_scale_j_Absolute',
+'jesAbsolute_2016': 'CMS_scale_j_Absolute_2016',
+'jesAbsolute_2017': 'CMS_scale_j_Absolute_2017',
+'jesAbsolute_2018': 'CMS_scale_j_Absolute_2018',
+'jesBBEC1': 'CMS_scale_j_BBEC1',
+'jesBBEC1_2016': 'CMS_scale_j_BBEC1_2016',
+'jesBBEC1_2017': 'CMS_scale_j_BBEC1_2017',
+'jesBBEC1_2018': 'CMS_scale_j_BBEC1_2018',
+'jesEC2': 'CMS_scale_j_EC2',
+'jesEC2_2016': 'CMS_scale_j_EC2_2016', 
+'jesEC2_2017': 'CMS_scale_j_EC2_2017', 
+'jesEC2_2018': 'CMS_scale_j_EC2_2018',
+'jesFlavorQCD': 'CMS_scale_j_FlavorQCD',
+'jesHF': 'CMS_scale_j_HF',
+'jesHF_2016': 'CMS_scale_j_HF_2016',
+'jesHF_2017': 'CMS_scale_j_HF_2017',
+'jesHF_2018': 'CMS_scale_j_HF_2018',
+'jesRelativeBal': 'CMS_scale_j_RelativeBal',
+'jesRelativeSample_2016': 'CMS_scale_j_RelativeSample_2016',
+'jesRelativeSample_2017': 'CMS_scale_j_RelativeSample_2017',
+'jesRelativeSample_2018': 'CMS_scale_j_RelativeSample_2018',
+'jer_2016': 'CMS_res_j_2016',
 'jer_2017': 'CMS_res_j_2017',
 'jer_2018': 'CMS_res_j_2018',
 'eer': 'CMS_res_e',
 'ees': 'CMS_scale_e',
 'me': 'CMS_scale_m',
-'pu_2016': 'CMS_pileup_2016',
+'pu_2016preVFP': 'CMS_pileup_2016preVFP',
+'pu_2016postVFP': 'CMS_pileup_2016postVFP',
 'pu_2017': 'CMS_pileup_2017',
 'pu_2018': 'CMS_pileup_2018',
 'pf_2016preVFP': 'CMS_prefiring_2016preVFP',
 'pf_2016postVFP': 'CMS_prefiring_2016postVFP',
 'pf_2017': 'CMS_prefiring_2017',
-'bTag_2016': 'CMS_eff_btag_2016',
+'bTag_2016preVFP': 'CMS_eff_btag_2016preVFP',
+'bTag_2016postVFP': 'CMS_eff_btag_2016postVFP',
 'bTag_2017': 'CMS_eff_btag_2017',
 'bTag_2018': 'CMS_eff_btag_2018',
-'UnclusteredEn_2016preVFP': 'CMS_scale_met_2016preVFP',
-'UnclusteredEn_2016postVFP': 'CMS_scale_met_2016postVFP',
-'UnclusteredEn_2017': 'CMS_scale_met_2017',
-'UnclusteredEn_2018': 'CMS_scale_met_2018',
+'UnclusteredEn': 'CMS_scale_met',
 }
   
 def addSyst(l,v):
@@ -140,9 +134,9 @@ def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False):
       f.write("%s\n"%l)
     if sys_:
       catnum = cats.index(cat)
-      df_gg, df_vbf = df_gg_full.iloc[bins[catnum][0]:bins[catnum][1]-1].sum(), df_vbf_full.iloc[bins[catnum][0]:bins[catnum][1]-1].sum()
-      QCDscale_ggH = 0.5*(df_gg['scalep5p5'] - df_gg['scalep22'])/df_gg['acc'] 
-      QCDscale_qqH = 0.5*(df_vbf['scalep5p5'] - df_vbf['scalep22'])/df_vbf['acc']
+      df_gg, df_vbf = df_gg_full.loc[bins[catnum][0]:bins[catnum][1]-1].sum(), df_vbf_full.loc[bins[catnum][0]:bins[catnum][1]-1].sum()
+      QCDscale_ggH = 0.5*(df_gg['weight_scalep5p5'] - df_gg['weight_scale22'])/df_gg['acc'] 
+      QCDscale_qqH = 0.5*(df_vbf['weight_scalep5p5'] - df_vbf['weight_scale22'])/df_vbf['acc']
       print "Finished QCDscale" 
       acceptance_scale_gg = (df_gg['weight_lhe102'] - df_gg['weight_lhe101'])*0.375/df_gg['acc']
       acceptance_scale_vbf = (df_vbf['weight_lhe102'] - df_vbf['weight_lhe101'])*0.375/df_vbf['acc']
@@ -178,31 +172,31 @@ def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False):
         f.write("%s\n"%sval)
     
       shapeSys = {}
-      with open('ShapeSys/Hem_shape_sys_%s.csv'%cat, mode='r') as csv_file:
-        csv_reader = csv.DictReader(csv_file)
-        line_count = 0
-        for row in csv_reader:
-          shapeSys[row['Proc']+'_'+row['Cat']+'_'+row['Param']+'_'+row['Sys']] = row['Value'] 
-    
-      f.write("---------------------------------------------\n")
-      for proc in procs:
-        if proc == 'bkg' or proc == 'data_obs': continue      
-        else:
-          if proc == 'GGLFV':
-            proccatMER = 'ggH_'+cat+'_sigma_me'
-            proccatMES = 'ggH_'+cat+'_dm_me'
-            proccatEER = 'ggH_'+cat+'_sigma_eer'
-            proccatEES = 'ggH_'+cat+'_dm_ees'
-            proc2 = 'ggH'
-          if proc == 'VBFLFV':
-            proccatMER = 'qqH_'+cat+'_sigma_me'
-            proccatMES = 'qqH_'+cat+'_dm_me'
-            proccatEER = 'qqH_'+cat+'_sigma_eer'
-            proccatEES = 'qqH_'+cat+'_dm_ees'
-            proc2 = 'qqH'
-        f.write('CMS_hem_nuisance_scale_e_%s_%s    param  0  %.4f\n'%(cat, proc2, max(abs(float(shapeSys[proccatEES+'Up'])), abs(float(shapeSys[proccatEES+'Down'])))))
-        f.write('CMS_hem_nuisance_scale_m_%s_%s    param  0  %.4f\n'%(cat, proc2, max(abs(float(shapeSys[proccatMES+'Up'])), abs(float(shapeSys[proccatMES+'Down'])))))
-        f.write('CMS_hem_nuisance_res_e_%s_%s      param  0  %.4f\n'%(cat, proc2, max(abs(float(shapeSys[proccatEER+'Up'])), abs(float(shapeSys[proccatEER+'Down'])))))
-        f.write('CMS_hem_nuisance_res_m_%s_%s      param  0  %.4f\n'%(cat, proc2, max(abs(float(shapeSys[proccatMER+'Up'])), abs(float(shapeSys[proccatMER+'Down'])))))
+#      with open('ShapeSys/Hem_shape_sys_%s.csv'%cat, mode='r') as csv_file:
+#        csv_reader = csv.DictReader(csv_file)
+#        line_count = 0
+#        for row in csv_reader:
+#          shapeSys[row['Proc']+'_'+row['Cat']+'_'+row['Param']+'_'+row['Sys']] = row['Value'] 
+#    
+#      f.write("---------------------------------------------\n")
+#      for proc in procs:
+#        if proc == 'bkg' or proc == 'data_obs': continue      
+#        else:
+#          if proc == 'GGLFV':
+#            proccatMER = 'ggH_'+cat+'_sigma_me'
+#            proccatMES = 'ggH_'+cat+'_dm_me'
+#            proccatEER = 'ggH_'+cat+'_sigma_eer'
+#            proccatEES = 'ggH_'+cat+'_dm_ees'
+#            proc2 = 'ggH'
+#          if proc == 'VBFLFV':
+#            proccatMER = 'qqH_'+cat+'_sigma_me'
+#            proccatMES = 'qqH_'+cat+'_dm_me'
+#            proccatEER = 'qqH_'+cat+'_sigma_eer'
+#            proccatEES = 'qqH_'+cat+'_dm_ees'
+#            proc2 = 'qqH'
+#        f.write('CMS_hem_nuisance_scale_e_%s_%s    param  0  %.4f\n'%(cat, proc2, max(abs(float(shapeSys[proccatEES+'Up'])), abs(float(shapeSys[proccatEES+'Down'])))))
+#        f.write('CMS_hem_nuisance_scale_m_%s_%s    param  0  %.4f\n'%(cat, proc2, max(abs(float(shapeSys[proccatMES+'Up'])), abs(float(shapeSys[proccatMES+'Down'])))))
+#        f.write('CMS_hem_nuisance_res_e_%s_%s      param  0  %.4f\n'%(cat, proc2, max(abs(float(shapeSys[proccatEER+'Up'])), abs(float(shapeSys[proccatEER+'Down'])))))
+#        f.write('CMS_hem_nuisance_res_m_%s_%s      param  0  %.4f\n'%(cat, proc2, max(abs(float(shapeSys[proccatMER+'Up'])), abs(float(shapeSys[proccatMER+'Down'])))))
     else:
       f.write('pdfindex_' +cat+'_13TeV    discrete\n') 
