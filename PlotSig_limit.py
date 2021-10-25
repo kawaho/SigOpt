@@ -16,7 +16,7 @@ parser.add_argument(
     "--bkg",
     action="store",
     dest="bkg",
-    default="bern2",
+    default="exp1",
     help="Which bkg model")
 parser.add_argument(
     "--cat",
@@ -46,7 +46,7 @@ def add_lumi():
     lumi.SetTextColor(    1 )
     lumi.SetTextSize(0.038)
     lumi.SetTextFont (   42 )
-    lumi.AddText("137.2 fb^{-1} (13 TeV)")
+    lumi.AddText("137.6 fb^{-1} (13 TeV)")
     return lumi
 
 def add_CMS():
@@ -163,12 +163,12 @@ def Initialize(lis_):
   for  i in range(len(lis_)):
     lis_[i] = 0
 
-run = True
-#run = 1
+#run = True
+run = 1
 cats = [1,101]
 catsSig = []
 catdiff = []
-
+ranges = [[], []]
 maxCombprev = 0.000001
 maxComb = 0
 minLim = 0
@@ -179,12 +179,12 @@ fResults = open('ScanResult_'+args.bkg+'_'+str(args.exSig)+'corrected.txt', 'w')
 #read the csv files to pd for quick systematics calculations as well as root files where ws for signal/data is saved
 if args.cat=='gg':
   df_gg_full, df_vbf_full = pd.read_csv('inputs/GG_GGcat.csv', index_col='quantiles'), pd.read_csv('inputs/VBF_GGcat.csv', index_col='quantiles')
-  file_gg_full, file_vbf_full = TFile('inputs/GG_GGcat.root'), TFile('inputs/VBF_GGcat.root')
-  file_data_full = TFile('inputs/GGcat.root')
+  file_gg_full, file_vbf_full = TFile('inputs/GG_GGcat.root').Get("CMS_emu_workspace"), TFile('inputs/VBF_GGcat.root').Get("CMS_emu_workspace")
+  file_data_full = TFile('inputs/GGcat.root').Get("CMS_emu_workspace")
 else:
   df_gg_full, df_vbf_full = pd.read_csv('inputs/GG_VBFcat.csv', index_col='quantiles'), pd.read_csv('inputs/VBF_VBFcat.csv', index_col='quantiles')
-  file_gg_full, file_vbf_full = TFile('inputs/GG_VBFcat.root'), TFile('inputs/VBF_VBFcat.root')
-  file_data_full = TFile('inputs/VBFcat.root')
+  file_gg_full, file_vbf_full = TFile('inputs/GG_VBFcat.root').Get("CMS_emu_workspace"), TFile('inputs/VBF_VBFcat.root').Get("CMS_emu_workspace")
+  file_data_full = TFile('inputs/VBFcat.root').Get("CMS_emu_workspace")
 #cats = [1, 40, 50, 100] so 1st cat is from 1 to 40, 2nd cat is 40 to 50...etc
 #i is which percentile you scanning
 #if i hit a boundry, raise exception 
@@ -193,13 +193,18 @@ def SigScan(i):
     if i in cats:  raise hitCat()
     inBetween = BoundaryScan(i, cats) 
     #Define boundaries for new scans
+    print('Check456',i,ranges,cats,inBetween)
     for c in range(len(cats)):
       if c==inBetween:
-        ranges[c].append([cats[c], i]) 
+        ranges[c] = [cats[c], i]
       elif c==inBetween+1:
-        ranges[c].append([i, cats[c]]) 
+        ranges[c] = [i, cats[c]]
+      elif c>inBetween:
+        ranges[c] = [cats[c-1], cats[c]]
       else:
-        ranges[c].append([cats[c], cats[c+1]]) 
+        ranges[c] = [cats[c], cats[c+1]]
+        print('Checklast',i,ranges,cats)
+    print('Check456',i,ranges,cats)
   except hitCat:
     return -1
 
@@ -208,7 +213,7 @@ def SigScan(i):
   fitstatus = 0
 
   for c in range(len(cats)):
-    fitstatus = fit(file_data_full, file_gg_full, file_vbf_full, args.bkg, ranges[c], '%scat%i_%i'%(args.cat,c,i))
+    fitstatus = fit(file_data_full, file_gg_full, file_vbf_full, args.bkg, ranges[c], '%scat%i_%i'%(args.cat,c,i), True)
     catname.append('%scat%i_%i'%(args.cat,c,i))
     combinestr += 'Name%i=Datacards/datacard_%scat%i_%i.txt '%(c+1,args.cat,c,i)
   writedatacard(catname, ranges, df_gg_full, df_vbf_full)
@@ -230,74 +235,80 @@ def SigScan(i):
   limitTree.GetEntry(0)
   sig = limitTree.limit
 #  sig = rd.randint(0, 500)
-  return [sig,lim] 
-
-#while run < 3:    
-while run:    
+  return [i,sig,lim] 
+if True:
+#while run < 2:    
+#while run:    
   ncats = len(catdiff) + 2
   Sigx, Sigy, Limy = array.array('f'), array.array('f'), array.array('f')
   Sigx_plot, Sigy_plot, Limy_plot = array.array('f'), array.array('f'), array.array('f')
-  pool = Pool(processes=cpu_count())
-  Comb = pool.map(SigScan, range(1,101)) 
-  fResults.write("%s\n"%str(Comb))
-  for i in range(len(Comb)):
-    if Comb[i] == -1: 
-      Sigx.append(i)
-      Sigy.append(0)
-      Limy.append(100)
-    else:
-      Sigx.append(i)
-      Sigy.append(Comb[i][0])
-      Limy.append(Comb[i][1])
-      Sigx_plot.append(i)
-      Sigy_plot.append(Comb[i][0])
-      Limy_plot.append(Comb[i][1])
+  #Comb = []
+  Comb= SigScan(23)
+  #for k in range(22,23):
+  #  Comb.append(SigScan(k))
+  #pool = Pool(32)#processes=cpu_count())
+  #Comb = pool.map(SigScan, range(1,101))#101)) 
+  print(Comb)
+  #fResults.write("%s\n"%str(Comb))
+  #for i in range(len(Comb)):
+  #  if Comb[i] == -1: 
+  #    Sigx.append(i)
+  #    Sigy.append(0)
+  #    Limy.append(100)
+  #  else:
+  #    Sigx.append(i)
+  #    Sigy.append(Comb[i][0])
+  #    Limy.append(Comb[i][1])
+  #    Sigx_plot.append(i/100.)
+  #    Sigy_plot.append(Comb[i][0])
+  #    Limy_plot.append(Comb[i][1])
 
-  Multigr = TMultiGraph()
-  ymax_ = PlotSig(Multigr, Sigx_plot, Sigy_plot, can)
-  PlotCat(Multigr, cats[1:-1], ymax_)
+  #Multigr = TMultiGraph()
+  #ymax_ = PlotSig(Multigr, Sigx_plot, Sigy_plot, can)
+  #PlotCat(Multigr, cats[1:-1], ymax_)
 
-  if args.limit:
-    Multigr2 = TMultiGraph()
-    ymax2_ = PlotSig(Multigr2, Sigx_plot, Limy_plot, can2, True)
-    PlotCat(Multigr2, cats[1:-1], ymax2_)
+  #if args.limit:
+  #  Multigr2 = TMultiGraph()
+  #  ymax2_ = PlotSig(Multigr2, Sigx_plot, Limy_plot, can2, True)
+  #  PlotCat(Multigr2, cats[1:-1], ymax2_)
 
-  maxComb_idx = np.argmax(Sigy)
-  maxComb = np.max(Sigy)
+  #maxComb_idx = np.argmax(Sigy)
+  #maxComb = np.max(Sigy)
 
-  diff = (maxComb - maxCombprev)/maxCombprev
-  if diff >= 0.01:
-    catdiff.append(diff)
-    cats.append(maxComb_idx)
-    cats.sort()
-    PlotMax(Multigr, maxComb_idx, ymax_)
-    DrawNSave(Multigr, ncats, can)
-    
-    if args.limit:
-      PlotMax(Multigr2, maxComb_idx, ymax2_)
-      DrawNSave(Multigr2, ncats, can2, True)
-    maxCombprev = maxComb
-    minLim = np.min(Limy)
-#    open('Hem_shape_sys.csv', 'w').close()
-#    run += 1
-    run = True
-  else: 
-#    run += 1
-    run = False
-    DrawNSave(Multigr, ncats, can)
-    if args.limit:
-      DrawNSave(Multigr2, ncats, can2, True)
-    fResults.write("Final Cats: %s\n"%str(cats))
-    fResults.write("Cat Diff: %s\n"%str(catdiff))
-    fResults.write("Final Sig: %f, Lim: %f\n"%(maxCombprev, minLim))
-    mvaCuts = []
-    for c in cats:
-      mvaCuts.append(df_gg_full[c]['lowerMVA'])
-    fResults.write("MVA Cuts: %s\n"%str(mvaCuts))
+  #diff = (maxComb - maxCombprev)/maxCombprev
+  #if diff >= 0.01:
+  #  catdiff.append(diff)
+  #  cats.append(maxComb_idx)
+  #  cats.sort()
+  #  ranges = [[] for i in cats]
+  #  PlotMax(Multigr, maxComb_idx/100., ymax_)
+  #  DrawNSave(Multigr, ncats, can)
+  #  
+  #  if args.limit:
+  #    PlotMax(Multigr2, maxComb_idx, ymax2_)
+  #    DrawNSave(Multigr2, ncats, can2, True)
+  #  maxCombprev = maxComb
+  #  minLim = np.min(Limy)
+# #   open('Hem_shape_sys.csv', 'w').close()
+  #  run += 1
+# #   run = True
+  #else: 
+  #  run += 1
+# #   run = False
+  #  DrawNSave(Multigr, ncats, can)
+  #  if args.limit:
+  #    DrawNSave(Multigr2, ncats, can2, True)
+  #  fResults.write("Final Cats: %s\n"%str(cats))
+  #  fResults.write("Cat Diff: %s\n"%str(catdiff))
+  #  fResults.write("Final Sig: %f, Lim: %f\n"%(maxCombprev, minLim))
+  #  mvaCuts = []
+  #  for c in cats[1:-1]:
+  #    mvaCuts.append(df_gg_full.loc[c]['lowerMVA'])
+  #  fResults.write("MVA Cuts: %s\n"%str(mvaCuts))
 
-    print "Final Cats ", cats
-    print "Cat Diff ", catdiff
-    print "MVA Cuts ", mvaCuts
-    print "Final Sig: ", maxCombprev, " Lim: ", minLim
+  #  print "Final Cats ", cats
+  #  print "Cat Diff ", catdiff
+  #  print "MVA Cuts ", mvaCuts
+  #  print "Final Sig: ", maxCombprev, " Lim: ", minLim
 
 fResults.close()

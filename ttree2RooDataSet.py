@@ -22,7 +22,7 @@ for whichcat in ['GGcat', 'VBFcat']:
 
   #Loop through quantiles and turn tree into RooDataSet
   for i in range(len(quantiles)-1):
-      datasets.append(r.RooDataSet("data_norm_range%i"%(i+1), "data_norm_range%i"%(i+1), tree_data, r.RooArgSet(mass,mva_dummy), "(mva<%d) && (mva>=%d)"%(quantiles[i+1], quantiles[i])))
+      datasets.append(r.RooDataSet("data_norm_range%i"%(i+1), "data_norm_range%i"%(i+1), tree_data, r.RooArgSet(mass,mva_dummy), "(mva<%f) && (mva>=%f)"%(quantiles[i+1], quantiles[i])))
 
   #output all RooDataSet into workspace
   w = r.RooWorkspace("CMS_emu_workspace", "CMS_emu_workspace")
@@ -40,11 +40,10 @@ for whichcat in ['GGcat', 'VBFcat']:
     tree = fin.Get('tree')
     for i in range(len(quantiles)-1):
     #Loop through quantiles and turn tree into RooDataSet
-      datasets.append(r.RooDataSet("norm_range%i"%(i+1), "norm_range%i"%(i+1), tree, r.RooArgSet(mass,mva_dummy,weight_dummy), "(mva<%d) && (mva>=%d)"%(quantiles[i+1],quantiles[i]), "weight"))
+      datasets.append(r.RooDataSet("norm_range%i"%(i+1), "norm_range%i"%(i+1), tree, r.RooArgSet(mass,mva_dummy,weight_dummy), "(mva<%f) && (mva>=%f)"%(quantiles[i+1],quantiles[i]), "weight"))
       for sys in leptonUnc:
         for UpDown in ['Up', 'Down']:
-          datasets.append(r.RooDataSet("%s_%s_range%i"%(sys,UpDown,i+1), "%s_%s_range%i"%(sys,UpDown,i+1), tree, r.RooArgSet(mass,mva_sys_dummy['mva_%s_%s'%(sys,UpDown)],weight_dummy), "(mva_%s_%s<%d) && (mva_%s_%s>=%d)"%(sys,UpDown,quantiles[i+1],sys,UpDown,quantiles[i]), "weight"))
-
+          datasets.append(r.RooDataSet("%s_%s_range%i"%(sys,UpDown,i+1), "%s_%s_range%i"%(sys,UpDown,i+1), tree, r.RooArgSet(mass,mva_sys_dummy['mva_%s_%s'%(sys,UpDown)],weight_dummy), "(mva_%s_%s<%f) && (mva_%s_%s>=%f)"%(sys,UpDown,quantiles[i+1],sys,UpDown,quantiles[i]), "weight"))
     #output all RooDataSet into workspace
     w = r.RooWorkspace("CMS_emu_workspace", "CMS_emu_workspace")
     for dataset in datasets:

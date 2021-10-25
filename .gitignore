@@ -1,3 +1,6 @@
+*.txt
+ShapeSys/
+*.png
 *.root
 inputs/
 Datacards/
