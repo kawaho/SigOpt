@@ -44,7 +44,7 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
     pdfb = ROOT.RooBernsteinFast(order)("pdf_{}_exp1".format(cat), "pdf_{}_exp1".format(cat), mass, coeffList) 
     #pdfb = ROOT.RooBernstein("pdf_{}_exp1".format(cat), "pdf_{}_exp1".format(cat), mass, coeffList)
 
-  fitResultb = pdfb.fitTo(db, ROOT.RooFit.Minimizer("Minuit2","minimize"), ROOT.RooFit.Save(1), ROOT.RooFit.SumW2Error(ROOT.kTRUE))
+  fitResultb = pdfb.fitTo(db, ROOT.RooFit.Minimizer("Minuit2","Migrad"), ROOT.RooFit.Save(1), ROOT.RooFit.SumW2Error(ROOT.kTRUE))
   #dataBinned = ROOT.RooDataHist("roohist_data_mass_{}".format(cat), "roohist_data_mass_{}".format(cat), ROOT.RooArgSet(mass), db) 
   
   allvars.append([db,neventb,pdfb])  
@@ -78,33 +78,36 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
     for i in range(effl+1, effh):
       dh.append(inWS.data("norm_range%i"%i))
     dh.SetName("data_{}_{}".format(cat,proc))
-
-    a1_dcb = ROOT.RooRealVar("{}_{}_a1".format(cat,proc), "{}_{}_a1".format(cat,proc), 2.5, .1, 5) 
-    a2_dcb = ROOT.RooRealVar("{}_{}_a2".format(cat,proc), "{}_{}_a2".format(cat,proc), 2.5, .1, 5)
-    dm_dcb = ROOT.RooRealVar("{}_{}_dm".format(cat,proc), "{}_{}_dm".format(cat,proc), -0.1, -1, 1.) #-0.1,-1,1
-    mean_err_e = ROOT.RooRealVar("CMS_hem_nuisance_scale_e_{}_{}".format(cat,proc), "CMS_hem_nuisance_scale_e_{}_{}".format(cat,proc), 0., -1., 1.)
-    mean_err_m = ROOT.RooRealVar("CMS_hem_nuisance_scale_m_{}_{}".format(cat,proc), "CMS_hem_nuisance_scale_m_{}_{}".format(cat,proc), 0., -1., 1.)
+    a1_dcb = ROOT.RooRealVar("{}_{}_a1".format(cat,proc), "{}_{}_a1".format(cat,proc), 0.6, .2, 1) #2.5, .1, 5 
+    a2_dcb = ROOT.RooRealVar("{}_{}_a2".format(cat,proc), "{}_{}_a2".format(cat,proc), 1, .6, 1.4) #2.5, .1, 5
+    #dm_dcb = ROOT.RooRealVar("{}_{}_dm".format(cat,proc), "{}_{}_dm".format(cat,proc), -0.1, -.5, 0) #-0.1,-1,1
+    dm_dcb = ROOT.RooRealVar("{}_{}_dm".format(cat,proc), "{}_{}_dm".format(cat,proc), 125, 124, 126) #-0.1,-1,1
+    mean_err_e = ROOT.RooRealVar("CMS_hem_nuisance_scale_e_{}_{}".format(cat,proc), "CMS_hem_nuisance_scale_e_{}_{}".format(cat,proc), 0., -.1, .1)
+    mean_err_m = ROOT.RooRealVar("CMS_hem_nuisance_scale_m_{}_{}".format(cat,proc), "CMS_hem_nuisance_scale_m_{}_{}".format(cat,proc), 0., -.1, .1)
     mean_err_e.setConstant(ROOT.kTRUE)
     mean_err_m.setConstant(ROOT.kTRUE)
-    mean_dcb = ROOT.RooFormulaVar("{}_{}_mean".format(cat,proc), "{}_{}_mean".format(cat,proc), "(125+@0)*(1+@1+@2)", ROOT.RooArgList(dm_dcb, mean_err_e, mean_err_m))
+    #mean_dcb = ROOT.RooFormulaVar("{}_{}_mean".format(cat,proc), "{}_{}_mean".format(cat,proc), "(125+@0)*(1+@1+@2)", ROOT.RooArgList(dm_dcb, mean_err_e, mean_err_m))
+    mean_dcb = ROOT.RooFormulaVar("{}_{}_mean".format(cat,proc), "{}_{}_mean".format(cat,proc), "(@0)*(1+@1+@2)", ROOT.RooArgList(dm_dcb, mean_err_e, mean_err_m))
     
     n1_dcb = ROOT.RooRealVar("{}_{}_n1".format(cat,proc), "{}_{}_n1".format(cat,proc), 3.5, 2., 15.)  #3.5, 2., 5.
     n2_dcb = ROOT.RooRealVar("{}_{}_n2".format(cat,proc), "{}_{}_n2".format(cat,proc), 20., 0., 150.) #20., 0., 100.
 
-    sigma = ROOT.RooRealVar("{}_{}_sigma".format(cat,proc), "{}_{}_sigma".format(cat,proc), 2, 1., 5) #2, 1., 2.5
-    sigma_err_e = ROOT.RooRealVar("CMS_hem_nuisance_res_e_{}_{}".format(cat,proc), "CMS_hem_nuisance_res_e_{}_{}".format(cat,proc), 0., -1., 1.)
-    sigma_err_m = ROOT.RooRealVar("CMS_hem_nuisance_res_m_{}_{}".format(cat,proc), "CMS_hem_nuisance_res_m_{}_{}".format(cat,proc), 0., -1., 1.)
+    sigma = ROOT.RooRealVar("{}_{}_sigma".format(cat,proc), "{}_{}_sigma".format(cat,proc), 1.5, .8, 2) #2, 1., 2.5
+    sigma_err_e = ROOT.RooRealVar("CMS_hem_nuisance_res_e_{}_{}".format(cat,proc), "CMS_hem_nuisance_res_e_{}_{}".format(cat,proc), 0., -.1, .1)
+    sigma_err_m = ROOT.RooRealVar("CMS_hem_nuisance_res_m_{}_{}".format(cat,proc), "CMS_hem_nuisance_res_m_{}_{}".format(cat,proc), 0., -.1, .1)
     sigma_err_e.setConstant(ROOT.kTRUE)
     sigma_err_m.setConstant(ROOT.kTRUE)
 
     sigma_dcb = ROOT.RooFormulaVar("{}_{}_sigma_dcb".format(cat,proc), "{}_{}_sigma_dcb".format(cat,proc), "@0*(1+@1+@2)", ROOT.RooArgList(sigma, sigma_err_e, sigma_err_m))
     
-    pdf = ROOT.RooCBExp("{}_{}_pdf".format(cat,proc), "{}_{}_pdf".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, n1_dcb, a2_dcb)
+#    pdf = ROOT.RooCBExp("{}_{}_pdf".format(cat,proc), "{}_{}_pdf".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, n1_dcb, a2_dcb)
+    pdf = ROOT.RooGausDoubleExp("{}_{}_pdf".format(cat,proc), "{}_{}_pdf".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, a2_dcb)
 #    pdf = ROOT.RooDoubleCBFast("{}_{}_pdf".format(cat,proc), "{}_{}_pdf".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, n1_dcb, a2_dcb, n2_dcb)
     numofevent = dh.sumEntries("1", "higgsRange")
     nevent = ROOT.RooRealVar("{}_{}_pdf_norm".format(cat,proc), "{}_{}_pdf_norm".format(cat,proc), numofevent, 0, 10*numofevent)
     
-    fitResult = pdf.fitTo(dh, ROOT.RooFit.Minimizer("Minuit2","minimize"), ROOT.RooFit.Save(1), ROOT.RooFit.Range("higgsRange"), ROOT.RooFit.SumW2Error(ROOT.kTRUE))
+    fitResult = pdf.fitTo(dh, ROOT.RooFit.Minimizer("Minuit2","Migrad"), ROOT.RooFit.Save(1), ROOT.RooFit.Range("higgsRange"), ROOT.RooFit.SumW2Error(ROOT.kTRUE))
+    #fitResult = pdf.fitTo(dh, ROOT.RooFit.Minimizer("Minuit2","minimize"), ROOT.RooFit.Save(1), ROOT.RooFit.Range("higgsRange"), ROOT.RooFit.SumW2Error(ROOT.kTRUE))
 
     if makePlot:
       canvas = ROOT.TCanvas("canvas","",0,0,800,800)
@@ -207,9 +210,9 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
     sigma.setConstant(ROOT.kTRUE)
     nevent.setConstant(ROOT.kTRUE)
     if sys_:
-      mean_err_e.setConstant(ROOT.kFALSE)
+#      mean_err_e.setConstant(ROOT.kFALSE)
+#      sigma_err_e.setConstant(ROOT.kFALSE)
       mean_err_m.setConstant(ROOT.kFALSE)
-      sigma_err_e.setConstant(ROOT.kFALSE)
       sigma_err_m.setConstant(ROOT.kFALSE)
 
     allvars.append([a1_dcb,a2_dcb,dm_dcb,n1_dcb,n2_dcb,nevent,dh,sigma_dcb,pdf])  
@@ -232,27 +235,32 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
         dh.append(inWS.data("{}_range{}".format(sys,i)))
 
       dh.SetName("data_{}_{}_{}".format(cat,proc,sys))
-      a1_dcb = ROOT.RooRealVar("{}_{}_a1_{}".format(cat,proc,sys), "{}_{}_a1_{}".format(cat,proc,sys), 2.5, .1, 5) 
-      a2_dcb = ROOT.RooRealVar("{}_{}_a2_{}".format(cat,proc,sys), "{}_{}_a2_{}".format(cat,proc,sys), 2.5, .1, 5)
-      dm_dcb = ROOT.RooRealVar("{}_{}_dm_{}".format(cat,proc,sys), "{}_{}_dm_{}".format(cat,proc,sys), -0.1, -1, 1.)
-      mean_err_e = ROOT.RooRealVar("CMS_hem_nuisance_scale_e_{}_{}".format(cat,proc), "CMS_hem_nuisance_scale_e_{}_{}".format(cat,sys), 0., -1., 1.)
-      ean_err_m = ROOT.RooRealVar("CMS_hem_nuisance_scale_m_{}_{}".format(cat,sys), "CMS_hem_nuisance_scale_m_{}_{}".format(cat,sys), 0., -1., 1.)
-      mean_err_e.setConstant(ROOT.kTRUE)
-      mean_err_m.setConstant(ROOT.kTRUE)
-      mean_dcb = ROOT.RooFormulaVar("{}_{}_mean_{}".format(cat,proc,sys), "{}_{}_mean_{}".format(cat,proc,sys), "(125+@0)*(1+@1+@2)", ROOT.RooArgList(dm_dcb, mean_err_e, mean_err_m))
+      a1_dcb = ROOT.RooRealVar("{}_{}_a1_{}".format(cat,proc,sys), "{}_{}_a1_{}".format(cat,proc,sys), 0.6, .2, 1) 
+      a2_dcb = ROOT.RooRealVar("{}_{}_a2_{}".format(cat,proc,sys), "{}_{}_a2_{}".format(cat,proc,sys), 1, .6, 1.4)
+      #dm_dcb = ROOT.RooRealVar("{}_{}_dm_{}".format(cat,proc,sys), "{}_{}_dm_{}".format(cat,proc,sys), -0.1, -0.5, 0)
+      dm_dcb = ROOT.RooRealVar("{}_{}_dm_{}".format(cat,proc,sys), "{}_{}_dm_{}".format(cat,proc,sys), 125, 124, 126)
+#      mean_err_e = ROOT.RooRealVar("CMS_hem_nuisance_scale_e_{}_{}".format(cat,proc), "CMS_hem_nuisance_scale_e_{}_{}".format(cat,sys), 0., -.1, .1)
+#      mean_err_m = ROOT.RooRealVar("CMS_hem_nuisance_scale_m_{}_{}".format(cat,sys), "CMS_hem_nuisance_scale_m_{}_{}".format(cat,sys), 0., -.1, .1)
+#      mean_err_e.setConstant(ROOT.kTRUE)
+#      mean_err_m.setConstant(ROOT.kTRUE)
+      #mean_dcb = ROOT.RooFormulaVar("{}_{}_mean_{}".format(cat,proc,sys), "{}_{}_mean_{}".format(cat,proc,sys), "(125+@0)*(1+@1+@2)", ROOT.RooArgList(dm_dcb, mean_err_e, mean_err_m))
+#      mean_dcb = ROOT.RooFormulaVar("{}_{}_mean_{}".format(cat,proc,sys), "{}_{}_mean_{}".format(cat,proc,sys), "(@0)*(1+@1+@2)", ROOT.RooArgList(dm_dcb, mean_err_e, mean_err_m))
+      mean_dcb = ROOT.RooFormulaVar("{}_{}_mean_{}".format(cat,proc,sys), "{}_{}_mean_{}".format(cat,proc,sys), "@0", ROOT.RooArgList(dm_dcb))
       
       n1_dcb = ROOT.RooRealVar("{}_{}_n1_{}".format(cat,proc,sys), "{}_{}_n1_{}".format(cat,proc,sys), 3.5, 2., 15.)
       n2_dcb = ROOT.RooRealVar("{}_{}_n2_{}".format(cat,proc,sys), "{}_{}_n2_{}".format(cat,proc,sys), 20., 0., 150.)
 
-      sigma = ROOT.RooRealVar("{}_{}_sigma_{}".format(cat,proc,sys), "{}_{}_sigma_{}".format(cat,proc,sys), 2, 1., 5)
-      sigma_err_e = ROOT.RooRealVar("CMS_hem_nuisance_res_e_{}_{}".format(cat,proc), "CMS_hem_nuisance_res_e_{}_{}".format(cat,proc), 0., -1., 1.)
-      sigma_err_m = ROOT.RooRealVar("CMS_hem_nuisance_res_m_{}_{}".format(cat,proc), "CMS_hem_nuisance_res_m_{}_{}".format(cat,proc), 0., -1., 1.)
-      sigma_err_e.setConstant(ROOT.kTRUE)
-      sigma_err_m.setConstant(ROOT.kTRUE)
+      sigma = ROOT.RooRealVar("{}_{}_sigma_{}".format(cat,proc,sys), "{}_{}_sigma_{}".format(cat,proc,sys), 1.5, .8, 2)
+#      sigma_err_e = ROOT.RooRealVar("CMS_hem_nuisance_res_e_{}_{}".format(cat,proc), "CMS_hem_nuisance_res_e_{}_{}".format(cat,proc), 0., -.1, .1)
+#      sigma_err_m = ROOT.RooRealVar("CMS_hem_nuisance_res_m_{}_{}".format(cat,proc), "CMS_hem_nuisance_res_m_{}_{}".format(cat,proc), 0., -.1, .1)
+#      sigma_err_e.setConstant(ROOT.kTRUE)
+#      sigma_err_m.setConstant(ROOT.kTRUE)
 
-      sigma_dcb = ROOT.RooFormulaVar("{}_{}_sigma_dcb_{}".format(cat,proc,sys), "{}_{}_sigma_dcb_{}".format(cat,proc,sys), "@0*(1+@1+@2)", ROOT.RooArgList(sigma, sigma_err_e, sigma_err_m))
+      sigma_dcb = ROOT.RooFormulaVar("{}_{}_sigma_dcb_{}".format(cat,proc,sys), "{}_{}_sigma_dcb_{}".format(cat,proc,sys), "@0", ROOT.RooArgList(sigma))
+      #sigma_dcb = ROOT.RooFormulaVar("{}_{}_sigma_dcb_{}".format(cat,proc,sys), "{}_{}_sigma_dcb_{}".format(cat,proc,sys), "@0*(1+@1+@2)", ROOT.RooArgList(sigma, sigma_err_e, sigma_err_m))
       
-      pdf = ROOT.RooCBExp("{}_{}_pdf".format(cat,proc), "{}_{}_pdf".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, n1_dcb, a2_dcb)
+      #pdf = ROOT.RooCBExp("{}_{}_pdf".format(cat,proc), "{}_{}_pdf".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, n1_dcb, a2_dcb)
+      pdf = ROOT.RooGausDoubleExp("{}_{}_pdf".format(cat,proc), "{}_{}_pdf".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, a2_dcb)
       #pdf = ROOT.RooDoubleCBFast("{}_{}_pdf_{}".format(cat,proc,sys), "{}_{}_pdf_{}".format(cat,proc,sys), mass, mean_dcb, sigma_dcb, a1_dcb, n1_dcb, a2_dcb, n2_dcb)
       
       a1_dcb.setVal(constr[0])
@@ -267,10 +275,10 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
         sigma.setVal(constr[5])
         sigma.setConstant(ROOT.kTRUE)
       elif "eer" in sys:
-        dm_dcb.setVal(constr[2]-125)
+        dm_dcb.setVal(constr[2])
         dm_dcb.setConstant(ROOT.kTRUE)
 
-      fitResult = pdf.fitTo(dh, ROOT.RooFit.Minimizer("Minuit2","minimize"), ROOT.RooFit.Save(1), ROOT.RooFit.Range("higgsRange"), ROOT.RooFit.SumW2Error(ROOT.kTRUE))
+      fitResult = pdf.fitTo(dh, ROOT.RooFit.Minimizer("Minuit2","Migrad"), ROOT.RooFit.Save(1), ROOT.RooFit.Range("higgsRange"), ROOT.RooFit.SumW2Error(ROOT.kTRUE))
       fitstatus += fitResult.status()
       
       changeindm = (mean_dcb.getVal() - constr[2])/constr[2]

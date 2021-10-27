@@ -39,7 +39,7 @@ can2 = TCanvas("can2","",0,0,800,800)
 def add_lumi():
     lowX=0.65
     lowY=0.82
-    lumi  = TPaveText(lowX,lowY, lowX+0.30, lowY+0.2, "NDC")
+    lumi  = TPaveText(lowX, lowY, lowX+0.30, lowY+0.2, "NDC")
     lumi.SetBorderSize(   0 )
     lumi.SetFillStyle(    0 )
     lumi.SetTextAlign(   12 )
@@ -115,7 +115,7 @@ def PlotSig(Multigr, Sigx, Sigy, canvas, lim=False):
    canvas.SetRightMargin(0.05)
    canvas.SetBottomMargin(0.13)
    gr.SetTitle("")
-#  gr.GetYaxis().SetRangeUser(np.max(Sigy)-20,  np.max(Sigy)+5)
+#   gr.GetYaxis().SetRangeUser(np.max(Sigy)-20,  np.max(Sigy)+5)
 #  gr.SetMarkerSize(5)
    gr.SetMarkerStyle(8)
    Multigr.Add(gr, 'ap')
@@ -124,8 +124,8 @@ def PlotSig(Multigr, Sigx, Sigy, canvas, lim=False):
 def PlotCat(Multigr, catsSig, ymax_):
   for cat in catsSig:
     line = TGraph(2)
-    line.SetPoint(0, cat, 0)
-    line.SetPoint(1, cat, ymax_)
+    line.SetPoint(0, cat/100., 0)
+    line.SetPoint(1, cat/100., ymax_)
     Multigr.Add(line, 'l')
     line.SetLineWidth(3)
 
@@ -149,7 +149,7 @@ def DrawNSave(Multigr, ncats, canvas, lim=False):
   if lim:
     canvas.SaveAs('Graphs/' + args.bkg + '_' + str(ncats) + '_' + str(args.exSig) + '_limit.png')
   else:
-    canvas.SaveAs('Graphs/' + args.bkg + '_' + str(ncats) + '_' + str(args.exSig) + '.png')
+    canvas.SaveAs('Graphs/' + args.bkg + '_' + str(ncats) + '_' + str(args.exSig) + '_' + args.cat + '.png')
 
 class hitCat(Exception): pass
 
@@ -163,8 +163,8 @@ def Initialize(lis_):
   for  i in range(len(lis_)):
     lis_[i] = 0
 
-#run = True
-run = 1
+run = True
+#run = 1
 cats = [1,101]
 catsSig = []
 catdiff = []
@@ -193,7 +193,6 @@ def SigScan(i):
     if i in cats:  raise hitCat()
     inBetween = BoundaryScan(i, cats) 
     #Define boundaries for new scans
-    print('Check456',i,ranges,cats,inBetween)
     for c in range(len(cats)):
       if c==inBetween:
         ranges[c] = [cats[c], i]
@@ -203,8 +202,6 @@ def SigScan(i):
         ranges[c] = [cats[c-1], cats[c]]
       else:
         ranges[c] = [cats[c], cats[c+1]]
-        print('Checklast',i,ranges,cats)
-    print('Check456',i,ranges,cats)
   except hitCat:
     return -1
 
@@ -213,10 +210,10 @@ def SigScan(i):
   fitstatus = 0
 
   for c in range(len(cats)):
-    fitstatus = fit(file_data_full, file_gg_full, file_vbf_full, args.bkg, ranges[c], '%scat%i_%i'%(args.cat,c,i), True)
+    fitstatus = fit(file_data_full, file_gg_full, file_vbf_full, args.bkg, ranges[c], '%scat%i_%i'%(args.cat,c,i))#, False, True, False)
     catname.append('%scat%i_%i'%(args.cat,c,i))
     combinestr += 'Name%i=Datacards/datacard_%scat%i_%i.txt '%(c+1,args.cat,c,i)
-  writedatacard(catname, ranges, df_gg_full, df_vbf_full)
+  writedatacard(catname, ranges, df_gg_full, df_vbf_full, sys_=True)
 #  if fitstatus != 0:
 #    return -1
 
@@ -235,80 +232,99 @@ def SigScan(i):
   limitTree.GetEntry(0)
   sig = limitTree.limit
 #  sig = rd.randint(0, 500)
-  return [i,sig,lim] 
-if True:
-#while run < 2:    
-#while run:    
+  #return [i,sig,lim] 
+  return [sig,lim] 
+#if True:
+#while run < 3:    
+while run:    
   ncats = len(catdiff) + 2
   Sigx, Sigy, Limy = array.array('f'), array.array('f'), array.array('f')
   Sigx_plot, Sigy_plot, Limy_plot = array.array('f'), array.array('f'), array.array('f')
   #Comb = []
-  Comb= SigScan(23)
+  #Comb= SigScan(75)
   #for k in range(22,23):
   #  Comb.append(SigScan(k))
-  #pool = Pool(32)#processes=cpu_count())
-  #Comb = pool.map(SigScan, range(1,101))#101)) 
-  print(Comb)
-  #fResults.write("%s\n"%str(Comb))
-  #for i in range(len(Comb)):
-  #  if Comb[i] == -1: 
-  #    Sigx.append(i)
-  #    Sigy.append(0)
-  #    Limy.append(100)
-  #  else:
-  #    Sigx.append(i)
-  #    Sigy.append(Comb[i][0])
-  #    Limy.append(Comb[i][1])
-  #    Sigx_plot.append(i/100.)
-  #    Sigy_plot.append(Comb[i][0])
-  #    Limy_plot.append(Comb[i][1])
+  pool = Pool(64)#processes=cpu_count())
+  Comb = pool.map(SigScan, range(1,101)) 
+  #for i in range(1,len(Comb)): 
+  #  if isinstance(Comb[i], list): #Comb[i]!=-1:
+  #    if Comb[i][0] > 5 or Comb[i][0] == 0:
+  #      if isinstance(Comb[i-1], list):  
+  #        Comb[i][0] = Comb[i-1][0]
+  #      if isinstance(Comb[i+1], list):  
+  #        Comb[i][0] = Comb[i+1][0]
+  #      print('Failing %i'%(i+1))
+  #    if Comb[i][0] == 0:
+  #      print('Failing %i'%(i+1))
+  #print(Comb)
+  #for i in range(2,len(Comb)-1): 
+  #  if Comb[i][0] > 1.2*Comb[i+1][0]:
+  #    Comb[i][0] = 0
+  #  if Comb[i][0] > 1.2*Comb[i-1][0]:
+  #    Comb[i][0] = 0
+  fResults.write("%s\n"%str(Comb))
+  for i in range(len(Comb)):
+    if Comb[i] == -1: 
+      Sigx.append(i)
+      Sigy.append(0)
+      Limy.append(100)
+    elif Comb[i][0] > 5: 
+      Sigx.append(i)
+      Sigy.append(0)
+      Limy.append(100)
+    else:
+      Sigx.append(i)
+      Sigy.append(Comb[i][0])
+      Limy.append(Comb[i][1])
+      Sigx_plot.append(i/100.)
+      Sigy_plot.append(Comb[i][0])
+      Limy_plot.append(Comb[i][1])
 
-  #Multigr = TMultiGraph()
-  #ymax_ = PlotSig(Multigr, Sigx_plot, Sigy_plot, can)
-  #PlotCat(Multigr, cats[1:-1], ymax_)
+  Multigr = TMultiGraph()
+  ymax_ = PlotSig(Multigr, Sigx_plot, Sigy_plot, can)
+  PlotCat(Multigr, cats[1:-1], ymax_)
 
-  #if args.limit:
-  #  Multigr2 = TMultiGraph()
-  #  ymax2_ = PlotSig(Multigr2, Sigx_plot, Limy_plot, can2, True)
-  #  PlotCat(Multigr2, cats[1:-1], ymax2_)
+  if args.limit:
+    Multigr2 = TMultiGraph()
+    ymax2_ = PlotSig(Multigr2, Sigx_plot, Limy_plot, can2, True)
+    PlotCat(Multigr2, cats[1:-1], ymax2_)
 
-  #maxComb_idx = np.argmax(Sigy)
-  #maxComb = np.max(Sigy)
+  maxComb_idx = np.argmax(Sigy)
+  maxComb = np.max(Sigy)
 
-  #diff = (maxComb - maxCombprev)/maxCombprev
-  #if diff >= 0.01:
-  #  catdiff.append(diff)
-  #  cats.append(maxComb_idx)
-  #  cats.sort()
-  #  ranges = [[] for i in cats]
-  #  PlotMax(Multigr, maxComb_idx/100., ymax_)
-  #  DrawNSave(Multigr, ncats, can)
-  #  
-  #  if args.limit:
-  #    PlotMax(Multigr2, maxComb_idx, ymax2_)
-  #    DrawNSave(Multigr2, ncats, can2, True)
-  #  maxCombprev = maxComb
-  #  minLim = np.min(Limy)
-# #   open('Hem_shape_sys.csv', 'w').close()
-  #  run += 1
-# #   run = True
-  #else: 
-  #  run += 1
-# #   run = False
-  #  DrawNSave(Multigr, ncats, can)
-  #  if args.limit:
-  #    DrawNSave(Multigr2, ncats, can2, True)
-  #  fResults.write("Final Cats: %s\n"%str(cats))
-  #  fResults.write("Cat Diff: %s\n"%str(catdiff))
-  #  fResults.write("Final Sig: %f, Lim: %f\n"%(maxCombprev, minLim))
-  #  mvaCuts = []
-  #  for c in cats[1:-1]:
-  #    mvaCuts.append(df_gg_full.loc[c]['lowerMVA'])
-  #  fResults.write("MVA Cuts: %s\n"%str(mvaCuts))
+  diff = (maxComb - maxCombprev)/maxCombprev
+  if diff > 0.01:
+    catdiff.append(diff)
+    cats.append(maxComb_idx+1)
+    cats.sort()
+    ranges = [[] for i in cats]
+    PlotMax(Multigr, maxComb_idx/100., ymax_)
+    DrawNSave(Multigr, ncats, can)
+    
+    if args.limit:
+      PlotMax(Multigr2, maxComb_idx, ymax2_)
+      DrawNSave(Multigr2, ncats, can2, True)
+    maxCombprev = maxComb
+    minLim = np.min(Limy)
+#    run += 1
+    run = True
+  else: 
+#    run += 1
+    run = False
+    DrawNSave(Multigr, ncats, can)
+    if args.limit:
+      DrawNSave(Multigr2, ncats, can2, True)
+    fResults.write("Final Cats: %s\n"%str(cats))
+    fResults.write("Cat Diff: %s\n"%str(catdiff))
+    fResults.write("Final Sig: %f, Lim: %f\n"%(maxCombprev, minLim))
+    mvaCuts = []
+    for c in cats[1:-1]:
+      mvaCuts.append(df_gg_full.loc[c]['lowerMVA'])
+    fResults.write("MVA Cuts: %s\n"%str(mvaCuts))
 
-  #  print "Final Cats ", cats
-  #  print "Cat Diff ", catdiff
-  #  print "MVA Cuts ", mvaCuts
-  #  print "Final Sig: ", maxCombprev, " Lim: ", minLim
+    print "Final Cats ", cats
+    print "Cat Diff ", catdiff
+    print "MVA Cuts ", mvaCuts
+    print "Final Sig: ", maxCombprev, " Lim: ", minLim
 
 fResults.close()
