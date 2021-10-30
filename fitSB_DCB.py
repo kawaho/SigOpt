@@ -96,8 +96,8 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
     n1_dcb = ROOT.RooRealVar("{}_{}_n1".format(cat,proc), "{}_{}_n1".format(cat,proc), 3.5, 2., 15.)  #3.5, 2., 5.
     n2_dcb = ROOT.RooRealVar("{}_{}_n2".format(cat,proc), "{}_{}_n2".format(cat,proc), 20., 0., 5000.) #20., 0., 100.
 
-    sigma_nom_dcb = ROOT.RooRealVar("{}_{}_sigma_nom_cbe".format(cat,proc), "{}_{}_sigma_nom_cbe".format(cat,proc), 2, .1, 2.5) #1.5, .8, 2
-    sigma_nom_gaus = ROOT.RooRealVar("{}_{}_sigma_nom_gaus".format(cat,proc), "{}_{}_sigma_nom_gaus".format(cat,proc), 2, .1, 5.) #1.5, .8, 2
+    sigma_nom_dcb = ROOT.RooRealVar("{}_{}_sigma_cbe_nom".format(cat,proc), "{}_{}_sigma_nom_cbe".format(cat,proc), 2, .1, 2.5) #1.5, .8, 2
+    sigma_nom_gaus = ROOT.RooRealVar("{}_{}_sigma_gaus_nom".format(cat,proc), "{}_{}_sigma_nom_gaus".format(cat,proc), 2, .1, 5.) #1.5, .8, 2
     sigma_err_e = ROOT.RooRealVar("CMS_hem_nuisance_res_e_{}_{}".format(cat,proc), "CMS_hem_nuisance_res_e_{}_{}".format(cat,proc), 0., -.1, .1)
     sigma_err_m = ROOT.RooRealVar("CMS_hem_nuisance_res_m_{}_{}".format(cat,proc), "CMS_hem_nuisance_res_m_{}_{}".format(cat,proc), 0., -.1, .1)
     sigma_err_e.setConstant(ROOT.kTRUE)
@@ -108,11 +108,11 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
     frac_gaus = ROOT.RooRealVar("{}_{}_frac_gaus".format(cat,proc), "{}_{}_frac_gaus".format(cat,proc), 0.15, 0.1, 0.9)
 #    pdf = ROOT.RooGausDoubleExp("{}_{}_pdf".format(cat,proc), "{}_{}_pdf".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, a2_dcb)
 #    pdf_dcb = ROOT.RooCBShape("{}_{}_dcb".format(cat,proc), "{}_{}_dcb".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, n1_dcb)
-#    pdf = ROOT.RooDoubleCBFast("{}_{}_pdf".format(cat,proc), "{}_{}_pdf".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, n1_dcb, a2_dcb, n2_dcb)
+    pdf = ROOT.RooDoubleCBFast("{}_{}_pdf".format(cat,proc), "{}_{}_pdf".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, n1_dcb, a2_dcb, n2_dcb)
     #pdf_dcb = ROOT.RooDoubleCBFast("{}_{}_dcb".format(cat,proc), "{}_{}_dcb".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, n1_dcb, a2_dcb, n2_dcb)
-    pdf_dcb = ROOT.RooCBExp("{}_{}_cbe".format(cat,proc), "{}_{}_cbe".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, n1_dcb, a2_dcb)
-    pdf_gaus = ROOT.RooGaussian("{}_{}_gaus".format(cat,proc), "{}_{}_gaus".format(cat,proc),mass,mean_gaus,sigma_gaus)
-    pdf = ROOT.RooAddPdf("{}_{}_pdf".format(cat,proc), "{}_{}_pdf".format(cat,proc), ROOT.RooArgList(pdf_dcb, pdf_gaus), ROOT.RooArgList(frac_gaus))
+#    pdf_dcb = ROOT.RooCBExp("{}_{}_cbe".format(cat,proc), "{}_{}_cbe".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, n1_dcb, a2_dcb)
+#    pdf_gaus = ROOT.RooGaussian("{}_{}_gaus".format(cat,proc), "{}_{}_gaus".format(cat,proc),mass,mean_gaus,sigma_gaus)
+#    pdf = ROOT.RooAddPdf("{}_{}_pdf".format(cat,proc), "{}_{}_pdf".format(cat,proc), ROOT.RooArgList(pdf_dcb, pdf_gaus), ROOT.RooArgList(frac_gaus))
     numofevent = dh.sumEntries("1", "higgsRange")
     nevent = ROOT.RooRealVar("{}_{}_pdf_norm".format(cat,proc), "{}_{}_pdf_norm".format(cat,proc), numofevent, 0, 10*numofevent)
     
@@ -141,10 +141,19 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
       latex.SetTextAlign(31);
       latex.SetTextAlign(11);
       frame = mass.frame(ROOT.RooFit.Range("higgsRange"), ROOT.RooFit.Title(" "))
-      dh.plotOn(frame, ROOT.RooFit.CutRange("higgsRange"), ROOT.RooFit.DataError(ROOT.RooAbsData.SumW2), ROOT.RooFit.Binning(50,110,135))
+      dh.plotOn(frame, ROOT.RooFit.CutRange("higgsRange"), ROOT.RooFit.DataError(ROOT.RooAbsData.SumW2), ROOT.RooFit.Binning(25,110,135))
       pdf.plotOn(frame, ROOT.RooFit.Normalization(dh.sumEntries("1", "higgsRange"), ROOT.RooAbsReal.NumEvent), ROOT.RooFit.NormRange("higgsRange"), ROOT.RooFit.Range("higgsRange"))
-      print('Chi2', frame.chiSquare(8))
-      txt = "#chi^{2} / ndf = %.2f / %i" %(frame.chiSquare()*50, 50-8);
+      print('Chi2', frame.chiSquare(6))
+      txt = "#chi^{2} / ndf = %.2f / %i" %(frame.chiSquare()*50, 50-6);
+      fitted_parms = fitResult.floatParsFinal()
+      iter_ = fitted_parms.createIterator()
+      var = iter_.Next()
+      parm_plot = ""
+      while var :
+        parm_plot+=var.GetName().split("_",2)[2].replace('_cbe_nom','')+" = "
+        parm_plot+=str(round(var.getVal(),3))+" #pm "
+        parm_plot+=str(round(var.getError(),3))+"\n" 
+        var = iter_.Next()
       frame.SetTitle("");
       frame.SetXTitle("m_{e#mu} [GeV]");
       frame.SetMinimum(0);
@@ -212,6 +221,17 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
       #latex.SetTextSize(0.055*0.8*0.76);
       #latex.SetTextAlign(12);
       #latex.DrawLatex(lowX, lowY+0.05, txt);
+
+      parmtxt  = ROOT.TPaveText(lowX, lowY-0.27, lowX+0.3, lowY-0.01, "NDC");
+      parmtxt.SetTextFont(42);
+      parmtxt.SetTextSize(0.055*0.8*0.76);
+      parmtxt.SetBorderSize(   0 );
+      parmtxt.SetFillStyle(    0 );
+      parmtxt.SetTextAlign(   12 );
+      parmtxt.SetTextColor(    1 );
+      for parm_text in parm_plot.split("\n"):
+        parmtxt.AddText(parm_text);
+      parmtxt.Draw("same");
 
       lowX=0.30;
       lowY=0.71;

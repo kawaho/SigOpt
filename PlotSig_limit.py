@@ -1,7 +1,7 @@
 import os, time, sys, glob, math, array, argparse
 from ROOT import TLatex, gROOT, gPad, TFile, TH1F, TH2F, TGraph, TCanvas, TLine, gPad, TMultiGraph, TPaveText
 from writedatacard import writedatacard
-from fitSB_tree import fit
+from fitSB_scan import fit
 import numpy as np
 import pandas as pd
 import random as rd
@@ -97,12 +97,12 @@ def PlotSig(Multigr, Sigx, Sigy, canvas, lim=False):
    gPad.SetFrameBorderMode(0)
    gPad.SetFrameBorderSize(10)
    gr = TGraph(len(Sigx), Sigx, Sigy)
-   gr.GetXaxis().SetRangeUser(0, 1)
    gr.GetXaxis().SetTitle("BDT Signal Efficiency")
    if lim:
      gr.GetYaxis().SetTitle("95% CL Expected Limit, 10^{-4}")
    else:
      gr.GetYaxis().SetTitle("Expected Significance (#sigma)")
+   gr.GetXaxis().SetLimits(0, 1)
    gr.GetXaxis().SetTitleFont(42)
    gr.GetYaxis().SetTitleFont(42)
    gr.GetXaxis().SetTitleSize(0.05)
@@ -124,8 +124,8 @@ def PlotSig(Multigr, Sigx, Sigy, canvas, lim=False):
 def PlotCat(Multigr, catsSig, ymax_):
   for cat in catsSig:
     line = TGraph(2)
-    line.SetPoint(0, cat/100., 0)
-    line.SetPoint(1, cat/100., ymax_)
+    line.SetPoint(0, 1-cat/100., 0)
+    line.SetPoint(1, 1-cat/100., ymax_)
     Multigr.Add(line, 'l')
     line.SetLineWidth(3)
 
@@ -147,7 +147,7 @@ def DrawNSave(Multigr, ncats, canvas, lim=False):
   l3 = add_Preliminary()
   l3.Draw("same")
   if lim:
-    canvas.SaveAs('Graphs/' + args.bkg + '_' + str(ncats) + '_' + str(args.exSig) + '_limit.png')
+    canvas.SaveAs('Graphs/' + args.bkg + '_' + str(ncats) + '_' + str(args.exSig) + '_' + args.cat + '_limit.png')
   else:
     canvas.SaveAs('Graphs/' + args.bkg + '_' + str(ncats) + '_' + str(args.exSig) + '_' + args.cat + '.png')
 
@@ -174,7 +174,7 @@ maxComb = 0
 minLim = 0
 maxI = [-1,-1,-1]
 maxSigI = -1
-fResults = open('ScanResult_'+args.bkg+'_'+str(args.exSig)+'corrected.txt', 'w')
+fResults = open('ScanResult_'+args.bkg+'_'+str(args.exSig)+'_'+str(args.cat)+'_corrected.txt', 'w')
 
 #read the csv files to pd for quick systematics calculations as well as root files where ws for signal/data is saved
 if args.cat=='gg':
@@ -205,12 +205,15 @@ def SigScan(i):
   except hitCat:
     return -1
 
+  #return [rd.randint(1, 500)/100., 0,0,0]
   catname = []
   combinestr = ''
   fitstatus = 0
 
   for c in range(len(cats)):
-    fitstatus = fit(file_data_full, file_gg_full, file_vbf_full, args.bkg, ranges[c], '%scat%i_%i'%(args.cat,c,i))#, False, True, False)
+    fitstatus, numofeventb, numofevent = fit(file_data_full, file_gg_full, file_vbf_full, args.bkg, ranges[c], '%scat%i_%i'%(args.cat,c,i))#, False, True, False)
+    if numofeventb == -1:
+      return -1
     catname.append('%scat%i_%i'%(args.cat,c,i))
     combinestr += 'Name%i=Datacards/datacard_%scat%i_%i.txt '%(c+1,args.cat,c,i)
   writedatacard(catname, ranges, df_gg_full, df_vbf_full, sys_=True)
@@ -233,22 +236,24 @@ def SigScan(i):
   sig = limitTree.limit
 #  sig = rd.randint(0, 500)
   #return [i,sig,lim] 
-  return [sig,lim] 
+  return [sig,lim,numofeventb,numofevent] 
 #if True:
-#while run < 3:    
+#while run < 2:    
 while run:    
   ncats = len(catdiff) + 2
   Sigx, Sigy, Limy = array.array('f'), array.array('f'), array.array('f')
   Sigx_plot, Sigy_plot, Limy_plot = array.array('f'), array.array('f'), array.array('f')
   #Comb = []
-  #Comb= SigScan(75)
+  #Comb= SigScan(98)
   #for k in range(22,23):
   #  Comb.append(SigScan(k))
   pool = Pool(64)#processes=cpu_count())
   Comb = pool.map(SigScan, range(1,101)) 
-  #for i in range(1,len(Comb)): 
-  #  if isinstance(Comb[i], list): #Comb[i]!=-1:
-  #    if Comb[i][0] > 5 or Comb[i][0] == 0:
+  for i in range(len(Comb)): 
+    if isinstance(Comb[i], list): #Comb[i]!=-1:
+      if Comb[i][0] > 5 or Comb[i][0]==0:
+        print('Failing %i'%(i+1))
+        print('Bkg %f, Sig %f'%(Comb[i][-2], Comb[i][-1]))
   #      if isinstance(Comb[i-1], list):  
   #        Comb[i][0] = Comb[i-1][0]
   #      if isinstance(Comb[i+1], list):  
@@ -264,19 +269,23 @@ while run:
   #    Comb[i][0] = 0
   fResults.write("%s\n"%str(Comb))
   for i in range(len(Comb)):
-    if Comb[i] == -1: 
-      Sigx.append(i)
-      Sigy.append(0)
-      Limy.append(100)
-    elif Comb[i][0] > 5: 
-      Sigx.append(i)
+    if isinstance(Comb[i], list):
+      if Comb[i][0] == 0:
+        if isinstance(Comb[i-1], list) and isinstance(Comb[i+1], list):  
+          Comb[i][0] = (Comb[i-1][0] + Comb[i+1][0])/2
+        elif isinstance(Comb[i+1], list):  
+          Comb[i][0] = Comb[i+1][0]
+        elif isinstance(Comb[i-1], list):  
+          Comb[i][0] = Comb[i-1][0]
+    if Comb[i] == -1 or Comb[i][0] > 5 or Comb[i][0]==0:  
+      Sigx.append(i+1)
       Sigy.append(0)
       Limy.append(100)
     else:
-      Sigx.append(i)
+      Sigx.append(i+1)
       Sigy.append(Comb[i][0])
       Limy.append(Comb[i][1])
-      Sigx_plot.append(i/100.)
+      Sigx_plot.append(1-(i+1)/100.)
       Sigy_plot.append(Comb[i][0])
       Limy_plot.append(Comb[i][1])
 
@@ -289,16 +298,16 @@ while run:
     ymax2_ = PlotSig(Multigr2, Sigx_plot, Limy_plot, can2, True)
     PlotCat(Multigr2, cats[1:-1], ymax2_)
 
-  maxComb_idx = np.argmax(Sigy)
+  maxComb_idx = np.argmax(Sigy) + 1
   maxComb = np.max(Sigy)
 
   diff = (maxComb - maxCombprev)/maxCombprev
   if diff > 0.01:
     catdiff.append(diff)
-    cats.append(maxComb_idx+1)
+    cats.append(maxComb_idx)
     cats.sort()
     ranges = [[] for i in cats]
-    PlotMax(Multigr, maxComb_idx/100., ymax_)
+    PlotMax(Multigr, 1-maxComb_idx/100., ymax_)
     DrawNSave(Multigr, ncats, can)
     
     if args.limit:

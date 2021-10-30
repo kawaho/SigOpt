@@ -91,34 +91,26 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
     mean_err_e.setConstant(ROOT.kTRUE)
     mean_err_m.setConstant(ROOT.kTRUE)
     mean_dcb = ROOT.RooFormulaVar("{}_{}_mean_cbe".format(cat,proc), "{}_{}_mean_cbe".format(cat,proc), "(@0)*(1+@1+@2)", ROOT.RooArgList(dm_dcb, mean_err_e, mean_err_m))
-    mean_gaus = ROOT.RooFormulaVar("{}_{}_mean_gaus".format(cat,proc), "{}_{}_mean_gaus".format(cat,proc), "(@0)*(1+@1+@2)", ROOT.RooArgList(dm_gaus, mean_err_e, mean_err_m))
     
     n1_dcb = ROOT.RooRealVar("{}_{}_n1".format(cat,proc), "{}_{}_n1".format(cat,proc), 3.5, 2., 15.)  #3.5, 2., 5.
-    n2_dcb = ROOT.RooRealVar("{}_{}_n2".format(cat,proc), "{}_{}_n2".format(cat,proc), 20., 0., 5000.) #20., 0., 100.
 
-    sigma_nom_dcb = ROOT.RooRealVar("{}_{}_sigma_nom_cbe".format(cat,proc), "{}_{}_sigma_nom_cbe".format(cat,proc), 2, .1, 2.5) #1.5, .8, 2
-    sigma_nom_gaus = ROOT.RooRealVar("{}_{}_sigma_nom_gaus".format(cat,proc), "{}_{}_sigma_nom_gaus".format(cat,proc), 2, .1, 5.) #1.5, .8, 2
+    sigma_nom_dcb = ROOT.RooRealVar("{}_{}_sigma_cbe_nom".format(cat,proc), "{}_{}_sigma_nom_cbe".format(cat,proc), 2, 1., 2.5) #1.5, .8, 2
     sigma_err_e = ROOT.RooRealVar("CMS_hem_nuisance_res_e_{}_{}".format(cat,proc), "CMS_hem_nuisance_res_e_{}_{}".format(cat,proc), 0., -.1, .1)
     sigma_err_m = ROOT.RooRealVar("CMS_hem_nuisance_res_m_{}_{}".format(cat,proc), "CMS_hem_nuisance_res_m_{}_{}".format(cat,proc), 0., -.1, .1)
     sigma_err_e.setConstant(ROOT.kTRUE)
     sigma_err_m.setConstant(ROOT.kTRUE)
 
     sigma_dcb = ROOT.RooFormulaVar("{}_{}_sigma_cbe".format(cat,proc), "{}_{}_sigma_cbe".format(cat,proc), "@0*(1+@1+@2)", ROOT.RooArgList(sigma_nom_dcb, sigma_err_e, sigma_err_m))
-    sigma_gaus = ROOT.RooFormulaVar("{}_{}_sigma_gaus".format(cat,proc), "{}_{}_sigma_gaus".format(cat,proc), "@0*(1+@1+@2)", ROOT.RooArgList(sigma_nom_gaus, sigma_err_e, sigma_err_m))
-    frac_gaus = ROOT.RooRealVar("{}_{}_frac_gaus".format(cat,proc), "{}_{}_frac_gaus".format(cat,proc), 0.15, 0.1, 0.9)
 #    pdf = ROOT.RooGausDoubleExp("{}_{}_pdf".format(cat,proc), "{}_{}_pdf".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, a2_dcb)
 #    pdf_dcb = ROOT.RooCBShape("{}_{}_dcb".format(cat,proc), "{}_{}_dcb".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, n1_dcb)
 #    pdf = ROOT.RooDoubleCBFast("{}_{}_pdf".format(cat,proc), "{}_{}_pdf".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, n1_dcb, a2_dcb, n2_dcb)
     #pdf_dcb = ROOT.RooDoubleCBFast("{}_{}_dcb".format(cat,proc), "{}_{}_dcb".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, n1_dcb, a2_dcb, n2_dcb)
-    pdf_dcb = ROOT.RooCBExp("{}_{}_cbe".format(cat,proc), "{}_{}_cbe".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, n1_dcb, a2_dcb)
-    pdf_gaus = ROOT.RooGaussian("{}_{}_gaus".format(cat,proc), "{}_{}_gaus".format(cat,proc),mass,mean_gaus,sigma_gaus)
-    pdf = ROOT.RooAddPdf("{}_{}_pdf".format(cat,proc), "{}_{}_pdf".format(cat,proc), ROOT.RooArgList(pdf_dcb, pdf_gaus), ROOT.RooArgList(frac_gaus))
+    pdf = ROOT.RooCBExp("{}_{}_pdf".format(cat,proc), "{}_{}_pdf".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, n1_dcb, a2_dcb)
     numofevent = dh.sumEntries("1", "higgsRange")
     nevent = ROOT.RooRealVar("{}_{}_pdf_norm".format(cat,proc), "{}_{}_pdf_norm".format(cat,proc), numofevent, 0, 10*numofevent)
     
     fitResult = pdf.fitTo(dh, ROOT.RooFit.Minimizer("Minuit2","Migrad"), ROOT.RooFit.Save(1), ROOT.RooFit.Range("higgsRange"), ROOT.RooFit.SumW2Error(ROOT.kTRUE))
     #fitResult = pdf.fitTo(dh, ROOT.RooFit.Minimizer("Minuit2","minimize"), ROOT.RooFit.Save(1), ROOT.RooFit.Range("higgsRange"), ROOT.RooFit.SumW2Error(ROOT.kTRUE))
-
     if makePlot:
       canvas = ROOT.TCanvas("canvas","",0,0,800,800)
       ROOT.gPad.SetFillColor(0);
@@ -141,10 +133,17 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
       latex.SetTextAlign(31);
       latex.SetTextAlign(11);
       frame = mass.frame(ROOT.RooFit.Range("higgsRange"), ROOT.RooFit.Title(" "))
-      dh.plotOn(frame, ROOT.RooFit.CutRange("higgsRange"), ROOT.RooFit.DataError(ROOT.RooAbsData.SumW2), ROOT.RooFit.Binning(50,110,135))
+      dh.plotOn(frame, ROOT.RooFit.CutRange("higgsRange"), ROOT.RooFit.DataError(ROOT.RooAbsData.SumW2), ROOT.RooFit.Binning(25,110,135))
       pdf.plotOn(frame, ROOT.RooFit.Normalization(dh.sumEntries("1", "higgsRange"), ROOT.RooAbsReal.NumEvent), ROOT.RooFit.NormRange("higgsRange"), ROOT.RooFit.Range("higgsRange"))
-      print('Chi2', frame.chiSquare(8))
-      txt = "#chi^{2} / ndf = %.2f / %i" %(frame.chiSquare()*50, 50-8);
+      fitted_parms = fitResult.floatParsFinal()
+      iter_ = fitted_parms.createIterator()
+      var = iter_.Next()
+      parm_plot = ""
+      while var :
+        parm_plot+=var.GetName().split("_",2)[2].replace('_cbe_nom','')+" = "
+        parm_plot+=str(round(var.getVal(),3))+" #pm "
+        parm_plot+=str(round(var.getError(),3))+"\n" 
+        var = iter_.Next()
       frame.SetTitle("");
       frame.SetXTitle("m_{e#mu} [GeV]");
       frame.SetMinimum(0);
@@ -197,6 +196,7 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
       cattxt.AddText(label2);
       cattxt.Draw("same");
 
+      txt = "#chi^{2} / ndf = %.2f / %i" %(frame.chiSquare()*25, 50-5);
       chitxt  = ROOT.TPaveText(lowX, lowY-0.01, lowX+0.3, lowY+0.09, "NDC");
       chitxt.SetTextFont(42);
       chitxt.SetTextSize(0.055*0.8*0.76);
@@ -206,12 +206,17 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
       chitxt.SetTextColor(    1 );
       chitxt.AddText(txt);
       chitxt.Draw("same");
-      #latex = ROOT.TLatex();
-      #latex.SetNDC();
-      #latex.SetTextFont(42);
-      #latex.SetTextSize(0.055*0.8*0.76);
-      #latex.SetTextAlign(12);
-      #latex.DrawLatex(lowX, lowY+0.05, txt);
+
+      parmtxt  = ROOT.TPaveText(lowX, lowY-0.25, lowX+0.3, lowY-0.01, "NDC");
+      parmtxt.SetTextFont(42);
+      parmtxt.SetTextSize(0.055*0.8*0.76);
+      parmtxt.SetBorderSize(   0 );
+      parmtxt.SetFillStyle(    0 );
+      parmtxt.SetTextAlign(   12 );
+      parmtxt.SetTextColor(    1 );
+      for parm_text in parm_plot.split("\n"):
+        parmtxt.AddText(parm_text);
+      parmtxt.Draw("same");
 
       lowX=0.30;
       lowY=0.71;
@@ -224,7 +229,7 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
       pretxt.SetTextColor(    1 );
       pretxt.AddText("Preliminary");
       pretxt.Draw("same");
-      canvas.SaveAs('Graphs/'+cat + '_' + proc +"_DCB.png")
+      canvas.SaveAs('Graphs/'+cat + '_' + proc +"_CBE.png")
 
     fitstatus += fitResult.status()
     #fitstatus += numofevent
@@ -232,12 +237,8 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
     a1_dcb.setConstant(ROOT.kTRUE)
     a2_dcb.setConstant(ROOT.kTRUE)
     dm_dcb.setConstant(ROOT.kTRUE)
-    dm_gaus.setConstant(ROOT.kTRUE)
     n1_dcb.setConstant(ROOT.kTRUE)
-    n2_dcb.setConstant(ROOT.kTRUE)
-    frac_gaus.setConstant(ROOT.kTRUE)
     sigma_nom_dcb.setConstant(ROOT.kTRUE)
-    sigma_nom_gaus.setConstant(ROOT.kTRUE)
     nevent.setConstant(ROOT.kTRUE)
     if sys_:
       mean_err_e.setConstant(ROOT.kFALSE)
@@ -245,21 +246,17 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
       mean_err_m.setConstant(ROOT.kFALSE)
       sigma_err_m.setConstant(ROOT.kFALSE)
 
-    allvars.append([a1_dcb,a2_dcb,dm_dcb,dm_gaus,n1_dcb,n2_dcb,frac_gaus,nevent,dh,sigma_nom_dcb,sigma_nom_gaus,pdf])  
+    allvars.append([a1_dcb,a2_dcb,dm_dcb,n1_dcb,nevent,dh,sigma_nom_dcb,pdf])  
     getattr(w, 'import')(pdf)
     getattr(w, 'import')(nevent)
     getattr(w, 'import')(dh)
   
-    constr = [0,0,0,0,0,0,0,0,0]
+    constr = [0,0,0,0,0]
     constr[0] = a1_dcb.getVal()
     constr[1] = a2_dcb.getVal()
     constr[2] = dm_dcb.getVal()
     constr[3] = n1_dcb.getVal()
-    constr[4] = n2_dcb.getVal()
-    constr[5] = sigma_nom_dcb.getVal()
-    constr[6] = dm_gaus.getVal()
-    constr[7] = sigma_nom_gaus.getVal()
-    constr[8] = frac_gaus.getVal()
+    constr[4] = sigma_nom_dcb.getVal()
 
 #Fit Systematics
     for sys in sysname:
@@ -271,47 +268,31 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
       a1_dcb = ROOT.RooRealVar("{}_{}_a1_{}".format(cat,proc,sys), "{}_{}_a1_{}".format(cat,proc,sys), 2.5, .1, 5) 
       a2_dcb = ROOT.RooRealVar("{}_{}_a2_{}".format(cat,proc,sys), "{}_{}_a2_{}".format(cat,proc,sys), 2.5, .1, 5)
       dm_dcb = ROOT.RooRealVar("{}_{}_mean_cbe_nom".format(cat,proc), "{}_{}_mean_cbe_nom".format(cat,proc), 125, 124, 126) #-0.1,-1,1
-      dm_gaus = ROOT.RooRealVar("{}_{}_mean_gaus_nom".format(cat,proc), "{}_{}_mean_gaus_nom".format(cat,proc), 125, 124, 126) #-0.1,-1,1
       mean_err = ROOT.RooRealVar("CMS_hem_nuisance_scale_{}_{}".format(cat,proc), "CMS_hem_nuisance_scale_{}_{}".format(cat,proc), 0., -.1, .1)
       mean_dcb = ROOT.RooFormulaVar("{}_{}_mean_cbe".format(cat,proc), "{}_{}_mean_cbe".format(cat,proc), "(@0)*(1+@1)", ROOT.RooArgList(dm_dcb, mean_err))
-      mean_gaus = ROOT.RooFormulaVar("{}_{}_mean_gaus".format(cat,proc), "{}_{}_mean_gaus".format(cat,proc), "(@0)*(1+@1)", ROOT.RooArgList(dm_gaus, mean_err))
       
       n1_dcb = ROOT.RooRealVar("{}_{}_n1_{}".format(cat,proc,sys), "{}_{}_n1_{}".format(cat,proc,sys), 3.5, 2., 15.)
-      n2_dcb = ROOT.RooRealVar("{}_{}_n2_{}".format(cat,proc,sys), "{}_{}_n2_{}".format(cat,proc,sys), 20., 0., 150.)
 
       sigma_nom_dcb = ROOT.RooRealVar("{}_{}_sigma_nom_cbe".format(cat,proc), "{}_{}_sigma_nom_cbe".format(cat,proc), 2, 1., 2.5) #1.5, .8, 2
-      sigma_nom_gaus = ROOT.RooRealVar("{}_{}_sigma_nom_gaus".format(cat,proc), "{}_{}_sigma_nom_gaus".format(cat,proc), 2, 1., 5.) #1.5, .8, 2
       sigma_err = ROOT.RooRealVar("CMS_hem_nuisance_res_{}_{}".format(cat,proc), "CMS_hem_nuisance_res_{}_{}".format(cat,proc), 0., -.1, .1)
       sigma_dcb = ROOT.RooFormulaVar("{}_{}_sigma_cbe".format(cat,proc), "{}_{}_sigma_cbe".format(cat,proc), "@0*(1+@1)", ROOT.RooArgList(sigma_nom_dcb, sigma_err))
-      sigma_gaus = ROOT.RooFormulaVar("{}_{}_sigma_gaus".format(cat,proc), "{}_{}_sigma_gaus".format(cat,proc), "@0*(1+@1)", ROOT.RooArgList(sigma_nom_gaus, sigma_err))
-      frac_gaus = ROOT.RooRealVar("{}_{}_frac_gaus".format(cat,proc), "{}_{}_frac_gaus".format(cat,proc), 0.15, 0.1, 0.9)
       
       #pdf = ROOT.RooCBExp("{}_{}_pdf".format(cat,proc), "{}_{}_pdf".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, n1_dcb, a2_dcb)
       #pdf = ROOT.RooGausDoubleExp("{}_{}_pdf".format(cat,proc), "{}_{}_pdf".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, a2_dcb)
       #pdf = ROOT.RooGausDoubleExp("{}_{}_pdf".format(cat,proc), "{}_{}_pdf".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, a2_dcb)
       #pdf = ROOT.RooDoubleCBFast("{}_{}_pdf_{}".format(cat,proc,sys), "{}_{}_pdf_{}".format(cat,proc,sys), mass, mean_dcb, sigma_dcb, a1_dcb, n1_dcb, a2_dcb, n2_dcb)
-      pdf_dcb = ROOT.RooCBExp("{}_{}_cbe".format(cat,proc), "{}_{}_cbe".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, n1_dcb, a2_dcb)
-      pdf_gaus = ROOT.RooGaussian("{}_{}_gaus".format(cat,proc), "{}_{}_gaus".format(cat,proc),mass,mean_gaus,sigma_gaus)
-      pdf = ROOT.RooAddPdf("{}_{}_pdf".format(cat,proc), "{}_{}_pdf".format(cat,proc), ROOT.RooArgList(pdf_dcb, pdf_gaus), ROOT.RooArgList(frac_gaus))
+      pdf = ROOT.RooCBExp("{}_{}_pdf".format(cat,proc), "{}_{}_pdf".format(cat,proc), mass, mean_dcb, sigma_dcb, a1_dcb, n1_dcb, a2_dcb)
       
       a1_dcb.setVal(constr[0])
       a2_dcb.setVal(constr[1])
       dm_dcb.setVal(constr[2]) 
       n1_dcb.setVal(constr[3])
-      n2_dcb.setVal(constr[4])
-      sigma_nom_dcb.setVal(constr[5])
-      dm_gaus.setVal(constr[6]) 
-      sigma_nom_gaus.setVal(constr[7])
-      frac_gaus.setVal(constr[8])
+      sigma_nom_dcb.setVal(constr[4])
       a1_dcb.setConstant(ROOT.kTRUE)
       a2_dcb.setConstant(ROOT.kTRUE)
       dm_dcb.setConstant(ROOT.kTRUE)  
       n1_dcb.setConstant(ROOT.kTRUE)
-      n2_dcb.setConstant(ROOT.kTRUE)
       sigma_nom_dcb.setConstant(ROOT.kTRUE) 
-      dm_gaus.setConstant(ROOT.kTRUE) 
-      sigma_nom_gaus.setConstant(ROOT.kTRUE) 
-      frac_gaus.setConstant(ROOT.kTRUE)
       if "ees" in sys:
         sigma_err.setConstant(ROOT.kTRUE)
       elif "eer" in sys:

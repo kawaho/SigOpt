@@ -139,8 +139,8 @@ def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False):
       catnum = cats.index(cat)
       df_gg, df_vbf = df_gg_full.loc[bins[catnum][0]:bins[catnum][1]-1].sum(), df_vbf_full.loc[bins[catnum][0]:bins[catnum][1]-1].sum()
 
-      QCDscale_ggH = 0.5*(df_gg['weight_scalep5p5'] - df_gg['weight_scale22'])/df_gg['acc'] 
-      QCDscale_qqH = 0.5*(df_vbf['weight_scalep5p5'] - df_vbf['weight_scale22'])/df_vbf['acc']
+      QCDscale_ggH = 0.5*(-df_gg['weight_scalep5p5'] + df_gg['weight_scale22'])/df_gg['acc'] 
+      QCDscale_qqH = 0.5*(-df_vbf['weight_scalep5p5'] + df_vbf['weight_scale22'])/df_vbf['acc']
       print "Finished QCDscale" 
       acceptance_scale_gg = (df_gg['weight_lhe102'] - df_gg['weight_lhe101'])*0.375/df_gg['acc']
       acceptance_scale_vbf = (df_vbf['weight_lhe102'] - df_vbf['weight_lhe101'])*0.375/df_vbf['acc']
@@ -151,6 +151,11 @@ def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False):
       acceptance_pdf_gg = df_gg[lhe_pdf].values.std()
       acceptance_pdf_vbf = df_vbf[lhe_pdf].values.std()
       print "Finished pdf acceptance" 
+      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('acceptance_pdf_gg','lnN',str(round(1+acceptance_pdf_gg,3)),'-','-'))
+      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('acceptance_pdf_vbf','lnN','-',str(round(1+acceptance_pdf_vbf,3)),'-'))
+      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('acceptance_scale_gg','lnN',str(round(1+acceptance_scale_gg,3)),'-','-'))
+      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('acceptance_scale_vbf','lnN','-',str(round(1+acceptance_scale_vbf,3)),'-'))
+      
       f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_Trigger_emu_13TeV','lnN','1.02','1.02','-'))
       f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_eff_e','lnN','1.02','1.02','-'))
       f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_eff_m','lnN','1.02','1.02','-'))
@@ -159,22 +164,18 @@ def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False):
       f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_lumi_2017_13TeV','lnN', str(round(1+.023*yrratio[1][0],3)), str(round(1+.023*yrratio[1][1],3)),'-'))
       f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_lumi_2018_13TeV','lnN', str(round(1+.025*yrratio[2][0],3)), str(round(1+.025*yrratio[2][1],3)),'-'))
       
-      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('QCDscale_ggH','lnN', str(round(1+QCDscale_ggH,3)),'-','-'))
-      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('QCDscale_qqH','lnN','-',str(round(1+QCDscale_qqH,3)),'-'))
-      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('acceptance_pdf_gg','lnN',str(round(1+acceptance_pdf_gg,3)),'-','-'))
-      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('acceptance_pdf_vbf','lnN','-',str(round(1+acceptance_pdf_vbf,3)),'-'))
-      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('acceptance_scale_gg','lnN',str(round(1+acceptance_scale_gg,3)),'-','-'))
-      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('acceptance_scale_vbf','lnN','-',str(round(1+acceptance_scale_vbf,3)),'-'))
-      
       sys = {'GGLFV':{}, 'VBLFV':{}}
       sys['GGLFV'] = calmigration(df_gg) 
       sys['VBLFV'] = calmigration(df_vbf)
-      for key, value in sys['GGLFV'].items():
+      for key in sorted(sys['GGLFV']):
         lsyst = '%-35s  %-20s    '%(CMSnames[key],'lnN')
-        sval = addSyst(lsyst, [value['Down'],value['Up']])
+        sval = addSyst(lsyst, [sys['GGLFV'][key]['Down'],sys['GGLFV'][key]['Up']])
         sval = addSyst(sval, [sys['VBLFV'][key]['Down'], sys['VBLFV'][key]['Up']])
         sval = addSyst(sval, [])
         f.write("%s\n"%sval)
+
+      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('QCDscale_ggH','lnN', str(round(1+QCDscale_ggH,3)),'-','-'))
+      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('QCDscale_qqH','lnN','-',str(round(1+QCDscale_qqH,3)),'-'))
     
       shapeSys = {}
       with open('ShapeSys/Hem_shape_sys_%s.csv'%cat, mode='r') as csv_file:
@@ -198,6 +199,8 @@ def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False):
             proccatEER = 'qqH_'+cat+'_sigma_eer'
             proccatEES = 'qqH_'+cat+'_dm_ees'
             proc2 = 'qqH'
+        f.write('CMS_hem_nuisance_scale_e_%s_%s    param  0  %.3f\n'%(cat, proc2, 0.01))
+        f.write('CMS_hem_nuisance_res_e_%s_%s      param  0  %.3f\n'%(cat, proc2, 0.01))
         #if max(abs(float(shapeSys[proccatEES+'_Up'])), abs(float(shapeSys[proccatEES+'_Down']))) > 0.001: 
 #          f.write('CMS_hem_nuisance_scale_e_%s_%s    param  0  %.3f\n'%(cat, proc2, max(abs(float(shapeSys[proccatEES+'_Up'])), abs(float(shapeSys[proccatEES+'_Down'])))))
         if max(abs(float(shapeSys[proccatMES+'_Up'])), abs(float(shapeSys[proccatMES+'_Down']))) > 0.001: 
