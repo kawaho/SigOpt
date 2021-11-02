@@ -48,7 +48,7 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
     pdfb = ROOT.RooBernsteinFast(order)("pdf_{}_exp1".format(cat), "pdf_{}_exp1".format(cat), mass, coeffList) 
     #pdfb = ROOT.RooBernstein("pdf_{}_exp1".format(cat), "pdf_{}_exp1".format(cat), mass, coeffList)
 
-  fitResultb = pdfb.fitTo(db, ROOT.RooFit.Minimizer("Minuit2","Migrad"), ROOT.RooFit.Save(1), ROOT.RooFit.SumW2Error(ROOT.kTRUE))
+  fitResultb = pdfb.fitTo(db, ROOT.RooFit.Minimizer("Minuit2","minimize"), ROOT.RooFit.Save(1), ROOT.RooFit.SumW2Error(ROOT.kTRUE))
   #dataBinned = ROOT.RooDataHist("roohist_data_mass_{}".format(cat), "roohist_data_mass_{}".format(cat), ROOT.RooArgSet(mass), db) 
   
   allvars.append([db,neventb,pdfb])  
@@ -109,8 +109,8 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
     numofevent = dh.sumEntries("1", "higgsRange")
     nevent = ROOT.RooRealVar("{}_{}_pdf_norm".format(cat,proc), "{}_{}_pdf_norm".format(cat,proc), numofevent, 0, 10*numofevent)
     
-    fitResult = pdf.fitTo(dh, ROOT.RooFit.Minimizer("Minuit2","Migrad"), ROOT.RooFit.Save(1), ROOT.RooFit.Range("higgsRange"), ROOT.RooFit.SumW2Error(ROOT.kTRUE))
-    #fitResult = pdf.fitTo(dh, ROOT.RooFit.Minimizer("Minuit2","minimize"), ROOT.RooFit.Save(1), ROOT.RooFit.Range("higgsRange"), ROOT.RooFit.SumW2Error(ROOT.kTRUE))
+    #fitResult = pdf.fitTo(dh, ROOT.RooFit.Minimizer("Minuit2","Migrad"), ROOT.RooFit.Save(1), ROOT.RooFit.Range("higgsRange"), ROOT.RooFit.SumW2Error(ROOT.kTRUE))
+    fitResult = pdf.fitTo(dh, ROOT.RooFit.Minimizer("Minuit2","minimize"), ROOT.RooFit.Save(1), ROOT.RooFit.Range("higgsRange"), ROOT.RooFit.SumW2Error(ROOT.kTRUE))
     if makePlot:
       canvas = ROOT.TCanvas("canvas","",0,0,800,800)
       ROOT.gPad.SetFillColor(0);
@@ -298,7 +298,7 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
       elif "eer" in sys:
         mean_err.setConstant(ROOT.kTRUE)
 
-      fitResult = pdf.fitTo(dh, ROOT.RooFit.Minimizer("Minuit2","Migrad"), ROOT.RooFit.Save(1), ROOT.RooFit.Range("higgsRange"), ROOT.RooFit.SumW2Error(ROOT.kTRUE))
+      fitResult = pdf.fitTo(dh, ROOT.RooFit.Minimizer("Minuit2","minimize"), ROOT.RooFit.Save(1), ROOT.RooFit.Range("higgsRange"), ROOT.RooFit.SumW2Error(ROOT.kTRUE))
       fitstatus += fitResult.status()
       
       changeindm = mean_err.getVal()

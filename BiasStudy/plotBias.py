@@ -6,10 +6,10 @@ if not os.path.exists('BiasPlot'):
   os.makedirs('BiasPlot')
 ROOT.gSystem.Load("libHiggsAnalysisCombinedLimit.so");
 ROOT.gROOT.SetBatch(True)
-cats = ['ggcat1','ggcat2','ggcat3']
-orders = [[1,1,2,1],[1,1,2,1],[1,1,2,1]]
+cats = ['ggcat0']#,'ggcat2','ggcat3']
+orders = [[1,1,1,1]]#,[1,1,2,1],[1,1,2,1]]
 
-bkgfile = ROOT.TFile('CMS_Hemu_13TeV_multipdf.root')
+bkgfile = ROOT.TFile('../Workspaces/CMS_Hemu_13TeV_multipdf.root')
 bkgWS = bkgfile.Get('multipdf')
 #outRoot = ROOT.TFile("hist_bias_study.root","RECREATE")
 for cat,order in zip(cats,orders):
@@ -44,10 +44,9 @@ for cat,order in zip(cats,orders):
       h = ROOT.gPad.GetPrimitive("h")
       h.SetTitle(cat+" Gen "+split_string[3]+" - Fit "+split_string2[3]+";Pull;");
       h.SetName('%sGen%sFit%s'%(cat,split_string[3],split_string2[3]))
-#      ROOT.gPad.SaveAs('BiasPlot/%sGen%sFit%s.png'%(cat,split_string[3],split_string2[3]))
-#      h.Write()
-#      print "Mean of bias of "+cat+" for pdf "+split_string[3]+" generated with pdf "+split_string2[3], h.GetMean()
-#      print "Standard Deviation of bias", h.GetStdDev()
+      ROOT.gPad.SaveAs('BiasPlot/%sGen%sFit%s.png'%(cat,split_string[3],split_string2[3]))
+      print "Mean of bias of "+cat+" for pdf "+split_string[3]+" generated with pdf "+split_string2[3], h.GetMean()
+      print "Standard Deviation of bias", h.GetStdDev()
       outfile.write(cat + " " + split_string[3] + " " + split_string2[3] +" "+ str(round(h.GetMean()*100,3)) + " " + str(round(h.GetStdDev(),3)) + "\n")
       if abs(h.GetMean()*100) > 14:
         biasTable[split_string2[3]][0] = False

@@ -47,7 +47,7 @@ for vbf_gg in ['gg', 'vbf']:
     rangl, rangh = range_[vbf_gg][i], range_[vbf_gg][i+1]
     catnames.append('%scat%i'%(vbf_gg,i))
     bins.append([rangl, rangh])
-    numberOfBkg[catnames[-1]] = fit(inWS, file_gg_full[vbf_gg].Get("CMS_emu_workspace"), file_vbf_full[vbf_gg].Get("CMS_emu_workspace"), 'exp1', [rangl, rangh], catnames[-1], True, False, True)[1]
+    numberOfBkg[catnames[-1]] = fit(inWS, file_gg_full[vbf_gg].Get("CMS_emu_workspace"), file_vbf_full[vbf_gg].Get("CMS_emu_workspace"), 'exp1', [rangl, rangh], catnames[-1], makePlot=True, saveData=True, sys_=False)[1]
     db.append(inWS.data("data_norm_range%i"%rangl))
     for j in range(rangl+1,rangh):
       db[-1].append(inWS.data("data_norm_range%i"%j))
@@ -58,7 +58,7 @@ for vbf_gg in ['gg', 'vbf']:
   #bins = [[0,40],[40,100]]
   
   #writedatacard(catnames, bins, False)
-  writedatacard(catnames, bins, df_gg_full[vbf_gg], df_vbf_full[vbf_gg], True, True)
+  writedatacard(catnames, bins, df_gg_full[vbf_gg], df_vbf_full[vbf_gg], sys_=False, limit=False)
 
 #lumi = ROOT.RooRealVar("IntLumi", "Integrated luminosity", 137.6, "fb^{-1}")
 #sqrts = ROOT.RooRealVar("SqrtS","Center of Mass Energy", 13, "TeV")

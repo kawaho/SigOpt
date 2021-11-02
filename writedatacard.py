@@ -74,28 +74,29 @@ def calyratio(df_gg,df_vbf):
 def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False):
 
   for cat in cats:
-    f = open('Datacards/datacard_'+cat+'.txt','w')
+    if sys_:
+      f = open('Datacards/datacard_'+cat+'.txt','w')
+    else:
+      f = open('Datacards/datacard_'+cat+'_NoSys.txt','w')
+
     f.write("imax *\n")
     f.write("jmax *\n")
     f.write("kmax *\n")
     f.write("---------------------------------------------\n")
     ws = '../Workspaces/workspace_sig_'+cat+'.root'
     ws2 = 'workspace_sig_'+cat+'.root'
-    dataws = 'CMS_Hemu_13TeV_multipdf.root'
+    dataws = '../Workspaces/CMS_Hemu_13TeV_multipdf.root'
     for proc in procs:
       if proc == 'bkg':
         if limit:
           f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,dataws,'multipdf:env_pdf_'+cat+'_exp1'))
-        elif sys_:
-          f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,ws,'w_13TeV:pdf_'+cat+'_exp1'))
+        elif not sys_:
+          f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,dataws,'multipdf:CMS_hemu_'+cat+'_13TeV_bkgshape'))
         else:
           f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,ws,'w_13TeV:pdf_'+cat+'_exp1'))
-          #f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,dataws,'multipdf:CMS_hemu_'+cat+'_13TeV_bkgshape'))
       elif proc == 'data_obs':
-        if limit:
-          f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,dataws,'multipdf:roohist_data_mass_'+cat))
-        elif sys_:
-          f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,ws,'w_13TeV:roohist_data_mass_'+cat))
+        if limit or not sys_:
+          f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,dataws,'multipdf:Data_13TeV_'+cat))
         else:
           f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,ws,'w_13TeV:roohist_data_mass_'+cat))
           #f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,dataws,'multipdf:roohist_data_mass_'+cat))
