@@ -89,7 +89,7 @@ def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False):
     for proc in procs:
       if proc == 'bkg':
         if limit:
-          f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,dataws,'multipdf:env_pdf_'+cat+'_exp1'))
+          f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,dataws,'multipdf:env_pdf_'+cat+'_bern1'))
         elif not sys_:
           f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,dataws,'multipdf:CMS_hemu_'+cat+'_13TeV_bkgshape'))
         else:
@@ -99,17 +99,12 @@ def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False):
           f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,dataws,'multipdf:Data_13TeV_'+cat))
         else:
           f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,ws,'w_13TeV:roohist_data_mass_'+cat))
-          #f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,dataws,'multipdf:roohist_data_mass_'+cat))
       else:
         if proc == 'GGLFV':
           proc2 = 'ggH'  
         if proc == 'VBFLFV':
           proc2 = 'qqH'
-        if limit or not sys_:
-          f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,ws,'w_13TeV:'+cat+'_'+proc2+'_pdf'))
-          #f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,ws2,'w_13TeV:'+cat+'_'+proc2+'_pdf'))
-        else:
-          f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,ws,'w_13TeV:'+cat+'_'+proc2+'_pdf'))
+        f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,ws,'w_13TeV:'+cat+'_'+proc2+'_pdf'))
   
     lbreak = '---------------------------------------------'
     lbin_cat = '%-25s'%"bin"

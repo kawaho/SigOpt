@@ -5,7 +5,7 @@ ROOT.gSystem.Load("libHiggsAnalysisCombinedLimit.so");
 ROOT.gROOT.SetBatch(True)
 cats = ['ggcat0','ggcat1','ggcat2','ggcat3','vbfcat0','vbfcat1','vbfcat2','vbfcat3']
 orders = [[1,1,1,1],[1,1,1,1],[1,1,1,1],[2,1,1,1],[1,1,1,1],[1,1,1,1],[1,1,1,1],[1,1,1,1]]
-
+current_dir = os.path.abspath('')
 def run(cmd):
   print "%s\n\n"%cmd
   os.system(cmd)
@@ -32,7 +32,7 @@ for (cat,order) in zip(cats,orders):
     for fn in frozen:
       if not pdfname in fn:
         frozenstr += ","+fn
-    Gen = "combine ../Datacards/datacard_" + cat + "_NoSys.txt -M GenerateOnly --setParameters pdfindex_" + cat + "_13TeV="+str(i)+" --toysNoSystematics -t 2000 --expectSignal 1 --saveToys -m 125 --freezeParameters pdfindex_" + cat + "_13TeV"+frozenstr+" --name "+split_string[3]+cat
+    Gen = "combine ../Datacards/datacard_" + cat + "_NoSys.txt -M GenerateOnly --setParameters pdfindex_" + cat + "_13TeV="+str(i)+" --toysNoSystematics -t 10 --expectSignal 1 --saveToys -m 125 --freezeParameters pdfindex_" + cat + "_13TeV"+frozenstr+" --name "+split_string[3]+cat
     run(Gen)
     for j in range(numofpdfcat):
       pdfname2 = multipdf.getPdf(j).GetName()
@@ -43,6 +43,6 @@ for (cat,order) in zip(cats,orders):
         if not pdfname2 in fn:
           frozenstr += ","+fn
 #      Fit = "combine ../Datacards/datacard_" + cat + "_NoSys.txt -M FitDiagnostics --setParameters pdfindex_" + cat +"_13TeV="+str(j)+" --toysFile higgsCombine"+split_string[3]+cat+".GenerateOnly.mH125.123456.root  -t 10 -m 125 --rMin -5 --rMax 5 --freezeParameters pdfindex_" + cat + "_13TeV"+frozenstr+" --cminDefaultMinimizerStrategy=0 -v 3 --name Gen"+split_string[3]+"Fit"+split_string2[3]+cat
-      Fit = "combineTool.py --job-mode condor --sub-opts=\'+JobFlavour=\"longlunch\"\' --task-name Gen"+split_string[3]+"Fit"+split_string2[3] + cat + " ../Datacards/datacard_" + cat + "_NoSys.txt -M FitDiagnostics --setParameters pdfindex_" + cat +"_13TeV="+str(j)+" --toysFile higgsCombine"+split_string[3]+cat+".GenerateOnly.mH125.123456.root  -t 2000 -m 125 --rMin -5 --rMax 5 --freezeParameters pdfindex_" + cat + "_13TeV"+frozenstr+" --cminDefaultMinimizerStrategy=0 --name Gen"+split_string[3]+"Fit"+split_string2[3]+cat
-      #Fit = "combineTool.py --job-mode crab3 --custom-crab custom_crab.py --task-name Gen"+split_string[3]+"Fit"+split_string2[3] + cat + " -d ../Datacards/datacard_" + cat + "_NoSys.txt -M FitDiagnostics --setParameters pdfindex_" + cat +"_13TeV="+str(j)+" --toysFile higgsCombine"+split_string[3]+cat+".GenerateOnly.mH125.123456.root  -t 10000 -m 125 --rMin -5 --rMax 5 --freezeParameters pdfindex_" + cat + "_13TeV"+frozenstr+" --cminDefaultMinimizerStrategy=0 -v 3 --name Gen"+split_string[3]+"Fit"+split_string2[3]+cat
+#      Fit = "combineTool.py --job-mode condor --sub-opts=\'+JobFlavour=\"longlunch\"\' --task-name Gen"+split_string[3]+"Fit"+split_string2[3] + cat + " ../Datacards/datacard_" + cat + "_NoSys.txt -M FitDiagnostics --setParameters pdfindex_" + cat +"_13TeV="+str(j)+" --toysFile higgsCombine"+split_string[3]+cat+".GenerateOnly.mH125.123456.root  -t 2000 -m 125 --rMin -5 --rMax 5 --freezeParameters pdfindex_" + cat + "_13TeV"+frozenstr+" --cminDefaultMinimizerStrategy=0 --name Gen"+split_string[3]+"Fit"+split_string2[3]+cat
+      Fit = "combineTool.py --job-mode crab3 --dry-run --custom-crab custom_crab.py --crab-extra-files "+current_dir+"/higgsCombine"+split_string[3]+cat+".GenerateOnly.mH125.123456.root --task-name Gen"+split_string[3]+"Fit"+split_string2[3] + cat + " -d "+current_dir+"/../Datacards/datacard_" + cat + "_NoSys.txt -M FitDiagnostics --setParameters pdfindex_" + cat +"_13TeV="+str(j)+" --toysFile higgsCombine"+split_string[3]+cat+".GenerateOnly.mH125.123456.root  -t 10000 -m 125 --rMin -5 --rMax 5 --freezeParameters pdfindex_" + cat + "_13TeV"+frozenstr+" --cminDefaultMinimizerStrategy=0 -v 3 --name Gen"+split_string[3]+"Fit"+split_string2[3]+cat
       run(Fit) 

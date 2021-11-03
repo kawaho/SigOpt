@@ -14,8 +14,7 @@ def ComputeSumYLimit(BranchingRatio = 0.1):
   return LimitOnSumY
 
 gROOT.SetBatch(True)
-#catnames = ["Combined","vbfcat1","ggcat0"]
-catnames = ["Combined","vbfcat1","ggcat4","ggcat3","ggcat2","ggcat1","ggcat0+vbfcat0"]
+catnames = ["Combined","vbfcat3","vbfcat2","vbfcat1","ggcat3","ggcat2","ggcat1","ggcat0"]
 ncats = len(catnames)
 limits = []
 for c in catnames:
@@ -76,14 +75,14 @@ PLOTLIMIT.SetFrameBorderMode(0)
 #print limits
 channels = []
 for i in range(ncats):
-  if i==ncats-1:
-    channels.append("#splitline{ggcat0 +}{#splitline{vbfcat0}{#scale[0.8]{(%1.2f #upoint 10^{-4})}}}"%(limits[i][2]))
-  else:  
-    channels.append("#splitline{%s}{#scale[0.8]{(%1.2f #upoint 10^{-4})}}"%(catnames[i], limits[i][2]))
+#  if i==ncats-1:
+#    channels.append("#splitline{ggcat0 +}{#splitline{vbfcat0}{#scale[0.8]{(%1.2f #upoint 10^{-4})}}}"%(limits[i][2]))
+#  else:  
+  channels.append("#splitline{%s}{#scale[0.8]{(%1.2f #upoint 10^{-4})}}"%(catnames[i], limits[i][2]))
 print channels
 PLOTLIMIT.cd()
 
-h = TH2F("h", "test", 1, -5, 25, ncats, 0, ncats)
+h = TH2F("h", "test", 0, 0, 15, ncats, 0, ncats)
 for ch in channels:
   h.Fill(1, ch, 0)
 h.SetXTitle("95% CL limit on #bf{#it{#Beta}}(H#rightarrow e#mu), 10^{-4}")
@@ -121,12 +120,12 @@ GRAPHMEDIAN.SetMarkerSize(.6)
 GRAPHMEDIAN.SetLineWidth(1)
 GRAPHMEDIAN.Draw("P,sames")
 
-lineV = TLine(0, 0, 0, ncats)
-lineV.SetLineStyle(3)
-lineV.SetLineColor(920)
-lineV.Draw()
+#lineV = TLine(0, 0, 0, ncats)
+#lineV.SetLineStyle(3)
+#lineV.SetLineColor(920)
+#lineV.Draw()
 
-lineH = TLine(-5, 1, 25, 1)
+lineH = TLine(0, 1, 15, 1)
 lineH.SetLineWidth(3)
 lineH.Draw()
 
@@ -156,7 +155,7 @@ latex.SetTextSize(0.04)
 latex.SetTextSize(0.04 * 0.80)
 latex.SetTextFont(42)
 latex.SetTextAlign(31)
-latex.DrawLatex(0.95, 0.9, "137.2 fb^{-1} (13 TeV)")
+latex.DrawLatex(0.95, 0.9, "137.6 fb^{-1} (13 TeV)")
 latex.SetTextSize(0.04)
 latex.SetTextFont(61)
 latex.SetTextAlign(11)

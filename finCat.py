@@ -58,7 +58,7 @@ for vbf_gg in ['gg', 'vbf']:
   #bins = [[0,40],[40,100]]
   
   #writedatacard(catnames, bins, False)
-  writedatacard(catnames, bins, df_gg_full[vbf_gg], df_vbf_full[vbf_gg], sys_=False, limit=False)
+  writedatacard(catnames, bins, df_gg_full[vbf_gg], df_vbf_full[vbf_gg], sys_=True, limit=True)
 
 #lumi = ROOT.RooRealVar("IntLumi", "Integrated luminosity", 137.6, "fb^{-1}")
 #sqrts = ROOT.RooRealVar("SqrtS","Center of Mass Energy", 13, "TeV")
