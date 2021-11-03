@@ -1,0 +1,2 @@
+rm *Gen*
+rm *.root

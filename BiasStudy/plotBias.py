@@ -53,24 +53,24 @@ for cat,order in zip(cats,orders):
       else:
         biasTable[split_string2[3]][1].append(h.GetMean()*100)
       file_.Close()
-  minBias = 20
-  pdfname = ''
-  order = 10
-  for key, value in biasTable.items():
-    if value[0] == False: 
-      continue
-    value[1].sort()
-    if int(re.findall("\d+", key)[0]) < order:
-      print re.findall("\d+", key)[0]
-      minBias = value[1][0]
-      pdfname = key
-      order = int(re.findall("\d+", key)[0])
-    elif re.findall("\d+", key)[0] == order:
-      if value[1][0] < minBias:
-        minBias = value[1][0]
-        pdfname = key
-        order = int(re.findall("\d+", key)[0])
-  outfile.write("----Final Choice----\n")
-  outfile.write("{}        {}\n".format(pdfname,round(minBias,3)))
+  #minBias = 20
+  #pdfname = ''
+  #order = 10
+  #for key, value in biasTable.items():
+  #  if value[0] == False: 
+  #    continue
+  #  value[1].sort()
+  #  if int(re.findall("\d+", key)[0]) < order:
+  #    print re.findall("\d+", key)[0]
+  #    minBias = value[1][0]
+  #    pdfname = key
+  #    order = int(re.findall("\d+", key)[0])
+  #  elif re.findall("\d+", key)[0] == order:
+  #    if value[1][0] < minBias:
+  #      minBias = value[1][0]
+  #      pdfname = key
+  #      order = int(re.findall("\d+", key)[0])
+  #outfile.write("----Final Choice----\n")
+  #outfile.write("{}        {}\n".format(pdfname,round(minBias,3)))
   outfile.close()
 #outRoot.Close()
