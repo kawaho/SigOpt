@@ -1,7 +1,7 @@
 import os, time, sys, glob, math, array, argparse
 from ROOT import TLatex, gROOT, gPad, TFile, TH1F, TH2F, TGraph, TCanvas, TLine, gPad, TMultiGraph, TPaveText
 from writedatacard import writedatacard
-from fitSB_scan import fit
+from fitSB_CBE import fit
 import numpy as np
 import pandas as pd
 import random as rd
@@ -16,7 +16,7 @@ parser.add_argument(
     "--bkg",
     action="store",
     dest="bkg",
-    default="exp1",
+    default="bern2",
     help="Which bkg model")
 parser.add_argument(
     "--cat",

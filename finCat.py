@@ -3,10 +3,16 @@ from fitSB_CBE import fit
 import pandas as pd
 import ROOT
 import argparse
-
+parser = argparse.ArgumentParser(
+    "Final Categories for LFV H analysis")
+parser.add_argument(
+    "--limit",
+    action='store_true'
+    )
+args = parser.parse_args()
 range_ =  { 
-  'gg': [1, 13, 40, 73, 101],
-  'vbf': [1, 16, 56, 77, 101]
+  'gg': [1, 13, 39, 73, 101],
+  'vbf': [1, 20, 56, 101]
 }
 file_data_full = {
   'gg': ROOT.TFile('inputs/GGcat.root'),
@@ -47,7 +53,10 @@ for vbf_gg in ['gg', 'vbf']:
     rangl, rangh = range_[vbf_gg][i], range_[vbf_gg][i+1]
     catnames.append('%scat%i'%(vbf_gg,i))
     bins.append([rangl, rangh])
-    numberOfBkg[catnames[-1]] = fit(inWS, file_gg_full[vbf_gg].Get("CMS_emu_workspace"), file_vbf_full[vbf_gg].Get("CMS_emu_workspace"), 'exp1', [rangl, rangh], catnames[-1], makePlot=True, saveData=True, sys_=False)[1]
+    if args.limit:
+      numberOfBkg[catnames[-1]] = fit(inWS, file_gg_full[vbf_gg].Get("CMS_emu_workspace"), file_vbf_full[vbf_gg].Get("CMS_emu_workspace"), 'exp1', [rangl, rangh], catnames[-1], makePlot=True, saveData=False, sys_=True)[1]
+    else:
+      numberOfBkg[catnames[-1]] = fit(inWS, file_gg_full[vbf_gg].Get("CMS_emu_workspace"), file_vbf_full[vbf_gg].Get("CMS_emu_workspace"), 'exp1', [rangl, rangh], catnames[-1], makePlot=True, saveData=False, sys_=False)[1]
     db.append(inWS.data("data_norm_range%i"%rangl))
     for j in range(rangl+1,rangh):
       db[-1].append(inWS.data("data_norm_range%i"%j))
@@ -57,16 +66,13 @@ for vbf_gg in ['gg', 'vbf']:
   #cats = [ggcat0,ggcat1]
   #bins = [[0,40],[40,100]]
   
-  #writedatacard(catnames, bins, False)
-  writedatacard(catnames, bins, df_gg_full[vbf_gg], df_vbf_full[vbf_gg], sys_=True, limit=True)
+  if args.limit:
+    writedatacard(catnames, bins, df_gg_full[vbf_gg], df_vbf_full[vbf_gg], sys_=True, limit=True)
+  else:
+    writedatacard(catnames, bins, df_gg_full[vbf_gg], df_vbf_full[vbf_gg], sys_=False, limit=False)
 
-#lumi = ROOT.RooRealVar("IntLumi", "Integrated luminosity", 137.6, "fb^{-1}")
-#sqrts = ROOT.RooRealVar("SqrtS","Center of Mass Energy", 13, "TeV")
 outWS = ROOT.RooWorkspace("CMS_emu_workspace", "CMS_emu_workspace")
-#wsobject.append([sqrts,lumi])
 getattr(outWS, 'import')(mass)
-#getattr(outWS, 'import')(sqrts)
-#getattr(outWS, 'import')(lumi)
 for d in db:
   getattr(outWS, 'import')(d)
 outWS.Print()

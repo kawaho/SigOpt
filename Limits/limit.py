@@ -14,7 +14,7 @@ def ComputeSumYLimit(BranchingRatio = 0.1):
   return LimitOnSumY
 
 gROOT.SetBatch(True)
-catnames = ["Combined","vbfcat3","vbfcat2","vbfcat1","ggcat3","ggcat2","ggcat1","ggcat0"]
+catnames = ["Combined","vbfcat2","vbfcat1","ggcat3","ggcat2","ggcat1","ggcat0"]
 ncats = len(catnames)
 limits = []
 for c in catnames:
@@ -42,7 +42,7 @@ print "==============================="
 print "          YUKAWA LIMIT         "
 print "==============================="
 
-yukawa = math.sqrt(ComputeSumYLimit(limits[-1][2]/100.))
+yukawa = math.sqrt(ComputeSumYLimit(limits[0][2]/1e4))
 print "   Yukawa limit: < %2.6f   "%(yukawa)
 
 gStyle.SetOptFit(1)
