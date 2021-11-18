@@ -1,3 +1,6 @@
+*.json
+*.pdf
+*.__*
 *Gen*
 *.out
 crab_*
