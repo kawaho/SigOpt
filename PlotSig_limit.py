@@ -16,7 +16,7 @@ parser.add_argument(
     "--bkg",
     action="store",
     dest="bkg",
-    default="bern2",
+    default="bern3",
     help="Which bkg model")
 parser.add_argument(
     "--cat",

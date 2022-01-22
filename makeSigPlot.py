@@ -2,7 +2,7 @@ import ROOT
 ROOT.gROOT.SetBatch(True)
 list_of_hist = []
 outfile = ROOT.TFile("Signal.root", "recreate")
-for cat in ['ggcat0','ggcat1','ggcat2','ggcat3','vbfcat0','vbfcat1','vbfcat2']:
+for cat in ['ggcat0','ggcat1','ggcat2','ggcat3','vbfcat0','vbfcat1']:
   infile = ROOT.TFile("Workspaces/workspace_sig_"+cat+".root")
   ws = infile.Get("w_13TeV")
   mass = ws.var("CMS_emu_Mass")

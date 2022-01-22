@@ -11,8 +11,8 @@ parser.add_argument(
     )
 args = parser.parse_args()
 range_ =  { 
-  'gg': [1, 13, 39, 73, 101],
-  'vbf': [1, 20, 56, 101]
+  'gg': [1, 40, 72, 101],
+  'vbf': [1, 14, 33, 101]
 }
 file_data_full = {
   'gg': ROOT.TFile('inputs/GGcat.root'),
