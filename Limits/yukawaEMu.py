@@ -152,9 +152,9 @@ for lts in Limits:
 for le in lines:
   le.Draw("same")
 
-GuideLim = [ComputeSumYLimit(j) for j in [1e-6, 1e-7, 1e-8]]
+GuideLim = [ComputeSumYLimit(j) for j in [1e-5, 1e-6, 1e-7, 1e-8]]
 GuideLimits = []
-for lim, pt in zip(GuideLim,[6.5, 7.8, 8.6]):
+for lim in GuideLim:
   GuideLimits.append(r.TF1("","sqrt([0]-x*x)",ymin,math.sqrt(lim)))
   GuideLimits[-1].SetParameter(0,lim)
   lineyy = list(np.arange(ymin, math.sqrt(lim)/2, 1e-8))
@@ -169,7 +169,7 @@ for lim, pt in zip(GuideLim,[6.5, 7.8, 8.6]):
   lines.append(r.TGraph(len(linexx), linexx, lineyy))
   lines[-1].SetLineColor(r.kBlue+4)
   lines[-1].SetLineWidth(1)
-  lines[-1].SetLineStyle(2)
+  lines[-1].SetLineStyle(3)
   lines[-1].Draw('same')  
 
 #naturalness
@@ -183,7 +183,7 @@ naturalness.SetLineColor(r.kMagenta+2) #naturalness->SetLineStyle(kDashed);
 naturalness.Draw("same")
 
 tt = []
-for lim, label in zip(GuideLim, ['10^{-6}', '10^{-7}', '10^{-8}']):
+for lim, label in zip(GuideLim, ['10^{-5}', '10^{-6}', '10^{-7}', '10^{-8}']):
   tt.append(r.TLatex(math.sqrt(lim)/1.4,3*ymin,"B<"+label))
   tt[-1].SetTextAlign(11)
   tt[-1].SetTextSize(0.027)
