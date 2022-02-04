@@ -99,21 +99,23 @@ grf1.Draw("f")
 
 #expected, mu->e+gamma, mu->3e, mu->e
 inDirectLim = [(1.5e-6)**2, (3.1e-5)**2, (4.6e-5)**2, YLimitExpect[2]]
-colors = [r.kPink+1, r.kWhite, r.kWhite, r.kRed+1]
+colors = [r.kPink+1, r.kBlue, r.kWhite, r.kRed+1]
 Limits, lines = [], []
 for lim, color in zip(inDirectLim, colors):
   Limits.append(r.TF1("","sqrt([0]-x*x)",ymin,math.sqrt(lim)))
   Limits[-1].SetParameter(0,lim)
-  Limits[-1].SetParName(0,"YLimit")
-  Limits[-1].SetNpx(800)
-  Limits[-1].SetLineColor(color) #kpink 
-  Limits[-1].SetLineWidth(3) 
-  if lim > (1e-5)**2: 
-    lineyy = array('f',list(np.arange(ymin, math.sqrt(lim), 1e-7)))
-    linexx = array('f',[Limits[-1].Eval(i) for i in np.arange(ymin, math.sqrt(lim), 1e-7)])
-    lines.append(r.TGraph(len(linexx), linexx, lineyy))
-    lines[-1].SetLineColor(color)
-    lines[-1].SetLineWidth(3)
+  lineyy = list(np.arange(ymin, math.sqrt(lim)/2, 1e-7))
+  linexx = [Limits[-1].Eval(i) for i in lineyy]
+  firstHalf = len(linexx)
+  linexx += list(np.arange(ymin, linexx[-1], 1e-8))
+  lineyy += [Limits[-1].Eval(i) for i in linexx[firstHalf:]]
+  lineyy = [i for _, i in sorted(zip(linexx, lineyy))]
+  linexx.sort()
+  lineyy = array('f', lineyy)
+  linexx = array('f', linexx)
+  lines.append(r.TGraph(len(linexx), linexx, lineyy))
+  lines[-1].SetLineColor(color)
+  lines[-1].SetLineWidth(3)
 
 yf =  [ Limits[0].Eval(xf[i]) for i in range(npf)]
 yf += [ ymin for i in range(npf)]
@@ -155,14 +157,15 @@ GuideLimits = []
 for lim, pt in zip(GuideLim,[6.5, 7.8, 8.6]):
   GuideLimits.append(r.TF1("","sqrt([0]-x*x)",ymin,math.sqrt(lim)))
   GuideLimits[-1].SetParameter(0,lim)
-  GuideLimits[-1].SetParName(0,"YLimit")
-  GuideLimits[-1].SetNpx(250)
-  GuideLimits[-1].SetLineColor(r.kBlue+4)  
-  GuideLimits[-1].SetLineWidth(1) 
-  GuideLimits[-1].SetLineStyle(2)
-  GuideLimits[-1].Draw('same')  
-  lineyy = array('f',list(np.arange(ymin, math.sqrt(lim)/pt, 1e-8)))
-  linexx = array('f',[GuideLimits[-1].Eval(i) for i in np.arange(ymin, math.sqrt(lim)/pt, 1e-8)])
+  lineyy = list(np.arange(ymin, math.sqrt(lim)/2, 1e-8))
+  linexx = [GuideLimits[-1].Eval(i) for i in lineyy]
+  firstHalf = len(linexx)
+  linexx += list(np.arange(ymin, linexx[-1], 1e-8))
+  lineyy += [GuideLimits[-1].Eval(i) for i in linexx[firstHalf:]]
+  lineyy = [i for _, i in sorted(zip(linexx, lineyy))]
+  linexx.sort()
+  lineyy = array('f', lineyy)
+  linexx = array('f', linexx)
   lines.append(r.TGraph(len(linexx), linexx, lineyy))
   lines[-1].SetLineColor(r.kBlue+4)
   lines[-1].SetLineWidth(1)
@@ -171,13 +174,38 @@ for lim, pt in zip(GuideLim,[6.5, 7.8, 8.6]):
 
 #naturalness
 naturalnessLimit= 0.1057*(0.511/1000)/(246**2)
-naturalness = r.TF1("dipole","[0]/x",ymin,1e-3)
+naturalness = r.TF1("dipole","[0]/x",ymin,ymax)
 naturalness.SetParameter(0,naturalnessLimit)
 naturalness.SetLineWidth(2)
 naturalness.SetNpx(500)
 naturalness.SetParName(0,"YLimit")
 naturalness.SetLineColor(r.kMagenta+2) #naturalness->SetLineStyle(kDashed);
 naturalness.Draw("same")
+
+tt = []
+for lim, label in zip(GuideLim, ['10^{-6}', '10^{-7}', '10^{-8}']):
+  tt.append(r.TLatex(math.sqrt(lim)/1.4,3*ymin,"B<"+label))
+  tt[-1].SetTextAlign(11)
+  tt[-1].SetTextSize(0.027)
+  tt[-1].SetTextColor(r.kBlue+4)
+  tt[-1].SetTextAngle(-90)
+  tt[-1].Draw()
+
+labels = ['#mu#rightarrow e#gamma', '#mu#rightarrow 3e', '#mu#rightarrow e conv.', 'expected H#rightarrow e#mu']
+for i in range(len(inDirectLim)):
+  tt.append(r.TLatex(ymin*1.2,1.1*math.sqrt(inDirectLim[i]),labels[i]))
+  tt[-1].SetTextAlign(11)
+  tt[-1].SetTextSize(0.03)
+  tt[-1].SetTextColor(colors[i])
+  tt[-1].Draw()
+
+tt.append(r.TLatex(1.8e-5,1e-4,"|Y_{e #mu}Y_{#mu e}|=m_{e}m_{#mu}/v^{2}"))
+tt[-1].SetTextAlign(11)
+tt[-1].SetTextSize(0.03)
+tt[-1].SetTextColor(r.kMagenta+2)
+tt[-1].SetTextAngle(-45)
+tt[-1].Draw()
+
 
 latex = r.TLatex()
 latex.SetNDC()
