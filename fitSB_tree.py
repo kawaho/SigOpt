@@ -170,7 +170,7 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
       lumi.SetTextColor(    1 );
       lumi.SetTextSize(0.038);
       lumi.SetTextFont (   42 );
-      lumi.AddText("137.6 fb^{-1} (13 TeV)");
+      lumi.AddText("138 fb^{-1} (13 TeV)");
       lumi.Draw("same");
  
       lowX=0.18;

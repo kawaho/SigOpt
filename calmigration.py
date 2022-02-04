@@ -1,15 +1,29 @@
+def smallUnc(val):
+  if abs(val-1.)<0.001:
+    return True
+  else:
+    return False
+
 def make2side(sysname):
   for key, value in sysname.items():
     if value['Up'] > 1 and value['Down'] > 1:
+      print(key+' is one-sided >1', value['Up'], value['Down'])
       if value['Down'] > value['Up']:
-        sysname[key]['Up'] = round(1./value['Down'], 3)
+        sysname[key]['Up'] = 1#round(1./value['Down'], 3)
       else:
-        sysname[key]['Down'] = round(1./value['Up'], 3)
+        sysname[key]['Down'] = 1#round(1./value['Up'], 3)
     elif value['Up'] < 1 and value['Down'] < 1:
+      print(key+' is one-sided <1', value['Up'], value['Down'])
       if value['Down'] > value['Up']:
-        sysname[key]['Down'] = round(1./value['Up'], 3)
+        sysname[key]['Down'] = 1#round(1./value['Up'], 3)
       else:
-        sysname[key]['Up'] = round(1./value['Down'], 3)
+        sysname[key]['Up'] = 1#round(1./value['Down'], 3)
+    if smallUnc(value['Up']) and smallUnc(value['Down']):
+      sysname[key]['Up'], sysname[key]['Down'] = -1, -1
+#    if smallUnc(value['Up']):
+#      sysname[key]['Up'] = 1
+#    if smallUnc(value['Down']):
+#      sysname[key]['Down'] = 1
 
 def calmigration(df):
   #list of all systematics

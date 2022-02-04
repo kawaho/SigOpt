@@ -14,7 +14,7 @@ def ComputeSumYLimit(BranchingRatio = 0.1):
   return LimitOnSumY
 
 gROOT.SetBatch(True)
-catnames = ["Combined","vbfcat2","vbfcat1","vbfcat0","ggcat2","ggcat1","ggcat0"]
+catnames = ["Combined","vbfcat1","vbfcat0","ggcat2","ggcat1","ggcat0"]
 ncats = len(catnames)
 limits = []
 for c in catnames:
@@ -82,7 +82,7 @@ for i in range(ncats):
 print channels
 PLOTLIMIT.cd()
 
-y_max = 65
+y_max = 20
 h = TH2F("h", "test", 0, 0, y_max, ncats, 0, ncats)
 for ch in channels:
   h.Fill(1, ch, 0)
@@ -156,7 +156,7 @@ latex.SetTextSize(0.04)
 latex.SetTextSize(0.04 * 0.80)
 latex.SetTextFont(42)
 latex.SetTextAlign(31)
-latex.DrawLatex(0.95, 0.9, "137.6 fb^{-1} (13 TeV)")
+latex.DrawLatex(0.95, 0.9, "138 fb^{-1} (13 TeV)")
 latex.SetTextSize(0.04)
 latex.SetTextFont(61)
 latex.SetTextAlign(11)
