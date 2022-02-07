@@ -37,12 +37,13 @@ parser.add_argument(
     action="store",
     dest="step",
     default=5,
+    type=int,
     help="Step size of grid")
 parser.add_argument(
     "--itr",
     action="store",
     dest="itr",
-    default=100,
+    default=500,
     help="Number of Iterations")
 parser.add_argument(
     "--ncat",
@@ -58,12 +59,33 @@ fResults = open('ScanResult_'+args.bkg+'_'+str(args.exSig)+'_'+str(args.cat)+'_g
 
 #make a list of steps to scan
 stepList = list(range(0, 100, args.step))[1:]
-print(stepList)
+completestepList = [1] + stepList + [101]
 rd.seed(123)
 
 def runCMD(cmd):
   print "%s\n\n"%cmd
   os.system(cmd)
+
+def GenListBkg(ncat):
+  nbkgList = GetNBkg(file_data_full, completestepList)
+  possibleList = list(itertools.combinations(stepList, ncat))
+  possibleBkg = []
+  for l in possibleList:
+    shortList = [ sum(nbkgList[ : stepList.index(l[0]) + 1]) ]
+    for i in range(len(l)-1):
+      shortList+= [ sum(nbkgList[ stepList.index(l[i]) + 1: stepList.index(l[i+1]) + 1])]
+    shortList.append( sum(nbkgList[ stepList.index(l[-1]) + 1 : ]) )
+    possibleBkg.append(shortList)
+  tosave = []
+  #for p in possibleBkg:
+  #  if not all(elem > 10 for elem in p):
+  #    print('fail', p, possibleList[possibleBkg.index(p)])
+  for p in possibleBkg:
+    if all(elem > 10 for elem in p):
+      tosave.append(possibleBkg.index(p))
+  possibleList = [[1]+list(i)+[101] for j, i in enumerate(possibleList) if j in tosave]
+  possibleList = rd.sample(possibleList, len(possibleList))
+  return possibleList[:min(len(possibleList), args.itr)]
 
 def GenList(ncat, cutList = [], itr=args.itr):
   #create a big list of boundaries to run fit on
@@ -117,41 +139,24 @@ def SigScan(nargs):
   sig = limitTree.limit
   return [sig,lim,numofeventb,numofevent] 
 
-completestepList = [1] + stepList + [101]
-nbkgList = GetNBkg(file_data_full, completestepList)
-possibleList = list(itertools.combinations(stepList, 3))
-possibleBkg = []
-for l in possibleList:
-  shortList = [ sum(nbkgList[ : stepList.index(l[1]) + 1]) ]
-  shortList+= [ sum(nbkgList[ stepList.index(l[i]) + 1: stepList.index(l[i+1]) + 1]) for i in range(1,len(l)-1)]
-  shortList.append( sum(nbkgList[ stepList.index(l[-1]) + 1 : ]) )
-  possibleBkg.append(shortList)
-print(possibleList)
-tosave = []
-for p in possibleBkg:
-  if all(elem > 10 for elem in p):
-    tosave.append(possibleBkg.index(p))
-possibleList = [i for j, i in enumerate(possibleList) if j in tosave]
-print(possibleList)
-#premax = 0
-##gain=100
-##n=3
-#for n in range(3, 4):    
-##while gain>1:
-#  if n==1:
-#    BList = [[1,i,100] for i in stepList]
-#  else:
-#    BList = GenList(n)
-#  print(BList)
-#
-#  #For loop
-#  #for j in range(len(BList)):
-#  #  fResults.write(str(SigScan([BList[j],j])))
-# 
-#  #Concurrent
-#  pool = Pool(64)#processes=cpu_count())
-#  Comb = pool.map(SigScan, [[BList[j],j] for j in range(len(BList))]) 
-#
+premax = 0
+gain=100
+n = 1
+while gain>1:
+  if n==1:
+    BList = [[1,i,101] for i in stepList]
+  else:
+    BList = GenListBkg(n) #GenList(n)
+    print(BList)
+    print(len(BList))
+  #For loop
+  #for j in range(len(BList)):
+  #  fResults.write(str(SigScan([BList[j],j])))
+ 
+  #Concurrent
+  pool = Pool(64)#processes=cpu_count())
+  Comb = pool.map(SigScan, [[BList[j],j] for j in range(len(BList))]) 
+
 #  if n!=1:
 #    nfail = 0
 #    for c in Comb:
@@ -169,20 +174,20 @@ print(possibleList)
 #      nfail = 0
 #      for c in Comb[preLen:]:
 #        if -999 in c: nfail+=1
-#
-#  signi = [i[0] for i in Comb]
-#  
-#  fResults.write("ncats "+str(n+1)+'\n')
-#  fResults.write("Blist "+str(BList)+'\n')
-#  fResults.write("Comb "+str(Comb)+'\n')
-#  fResults.write("Max Sig "+str(max(signi))+'\n')
-#  fResults.write("Max Sig Cuts "+str(BList[signi.index(max(signi))])+'\n')
-#  if premax!=0:
-#    gain = (max(signi)-premax)*100/premax 
-#    fResults.write("Gain "+str( gain )+'\n')
-#
-#  premax = max(signi)
-#  n+=1
-#
-#fResults.write("done")
-#
+
+  signi = [i[0] for i in Comb]
+  
+  fResults.write("ncats "+str(n+1)+'\n')
+  fResults.write("Blist "+str(BList)+'\n')
+  fResults.write("Comb "+str(Comb)+'\n')
+  fResults.write("Max Sig "+str(max(signi))+'\n')
+  fResults.write("Max Sig Cuts "+str(BList[signi.index(max(signi))])+'\n')
+  if premax!=0:
+    gain = (max(signi)-premax)*100/premax 
+    fResults.write("Gain "+str( gain )+'\n')
+
+  premax = max(signi)
+  n+=1
+
+fResults.write("done")
+runCMD('source clean.sh')
