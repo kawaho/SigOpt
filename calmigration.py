@@ -7,13 +7,13 @@ def smallUnc(val):
 def make2side(sysname):
   for key, value in sysname.items():
     if value['Up'] > 1 and value['Down'] > 1:
-      print(key+' is one-sided >1', value['Up'], value['Down'])
+      #print(key+' is one-sided >1', value['Up'], value['Down'])
       if value['Down'] > value['Up']:
         sysname[key]['Up'] = 1#round(1./value['Down'], 3)
       else:
         sysname[key]['Down'] = 1#round(1./value['Up'], 3)
     elif value['Up'] < 1 and value['Down'] < 1:
-      print(key+' is one-sided <1', value['Up'], value['Down'])
+      #print(key+' is one-sided <1', value['Up'], value['Down'])
       if value['Down'] > value['Up']:
         sysname[key]['Down'] = 1#round(1./value['Up'], 3)
       else:

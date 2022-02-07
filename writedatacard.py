@@ -188,9 +188,9 @@ def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False):
 #      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_ps','lnN','-',str(round(ps_vbf,3)),'-'))
       
       sys = {'GGLFV':{}, 'VBLFV':{}}
-      print('Calculating migration for gg')
+      #print('Calculating migration for gg')
       sys['GGLFV'] = calmigration(df_gg) 
-      print('Calculating migration for vbf')
+      #print('Calculating migration for vbf')
       sys['VBLFV'] = calmigration(df_vbf)
       for key in sorted(sys['GGLFV']):
         lsyst = '%-35s  %-20s    '%(CMSnames[key],'lnN')

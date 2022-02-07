@@ -4,6 +4,20 @@ import math
 ROOT.gSystem.Load("/afs/crc.nd.edu/user/k/kho2/CMSSW_10_2_13/lib/slc7_amd64_gcc700/libHiggsAnalysisGBRLikelihood.so")
 ROOT.gROOT.SetBatch(True)
 
+def GetNBkg(dataWS, bins):
+  #Fit data
+  inWS = dataWS #datafile.Get("CMS_emu_workspace")
+  mass = inWS.var("CMS_emu_Mass")
+  mass.setRange("R1",110.,115.)
+  mass.setRange("R2",135.,160.)
+  nbkg = [0 for i in range(len(bins)-1)]
+  for i in range(len(bins)-1):
+    effl, effh = bins[i], bins[i+1]
+    for j in range(effl, effh):
+      nbkg[i]+=inWS.data("data_norm_range%i"%j).sumEntries("1", "R1") + inWS.data("data_norm_range%i"%j).sumEntries("1", "R2")
+  return nbkg 
+  
+
 def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_=True):
   effl, effh = bins[0], bins[1]
   allvars = []

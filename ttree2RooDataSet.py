@@ -13,7 +13,7 @@ for sys in leptonUnc:
     mva_sys_dummy['mva_%s_%s'%(sys,UpDown)] = r.RooRealVar('mva_%s_%s'%(sys,UpDown), "mva", 0, 1)
     mass_sys['CMS_emu_Mass_%s_%s'%(sys,UpDown)] = r.RooRealVar('CMS_emu_Mass_%s_%s'%(sys,UpDown), "m_{e#mu}", 110, 160, "GeV")
 #Create dataframe for fast calulcations of systematics
-for whichcat in ['GGcat', 'VBFcat']:
+for whichcat in ['GGcat0', 'GGcat1', 'GGcat2', 'VBFcat']:
   #Get mva values corresponding to 100 quantiles 
   quantiles = np.load('inputs/'+whichcat+'_quantiles')
 
