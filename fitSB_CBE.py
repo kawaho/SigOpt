@@ -84,10 +84,16 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
   #Fit signal
   for inWS, proc in zip([ggWS, vbfWS],['ggH','qqH']):
     #inWS = rfile.Get("CMS_emu_workspace")
-    dh = inWS.data("norm_range%i"%effl).Clone()
+    mass_sig = inWS.var("CMS_emu_Mass")
+    mass_sig.setBins(50)
+
+    dataFull = inWS.data("norm_range%i"%effl).Clone()
+    dh = ROOT.RooDataHist("data_{}_{}".format(cat,proc),"data_{}_{}".format(cat,proc), ROOT.RooArgSet(mass_sig), dataFull)
     for i in range(effl+1, effh):
-      dh.append(inWS.data("norm_range%i"%i))
-    dh.SetName("data_{}_{}".format(cat,proc))
+      dh.add(inWS.data("norm_range%i"%i))
+#    dh = dh.binnedClone()
+
+#    dh.SetName("data_{}_{}".format(cat,proc))
     a1_dcb = ROOT.RooRealVar("{}_{}_a1".format(cat,proc), "{}_{}_a1".format(cat,proc), 2.5, .1, 5) #2.5, .1, 5 #0.6, .2, 1 
     a2_dcb = ROOT.RooRealVar("{}_{}_a2".format(cat,proc), "{}_{}_a2".format(cat,proc), 2.5, .1, 5) #2.5, .1, 5 #1, .6, 1.4
     dm_dcb = ROOT.RooRealVar("{}_{}_mean_cbe_nom".format(cat,proc), "{}_{}_mean_cbe_nom".format(cat,proc), 125, 124, 126) #-0.1,-1,1
@@ -264,12 +270,17 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
 
     shapeSys = {sys:{'dm':0.01,'dsigma':0.01} for sys in sysname}
 #Fit Systematics
-    for sys in sysname:
-      dh_sys = inWS.data("{}_range{}".format(sys,effl)).Clone()
-      for i in range(effl+1, effh):
-        dh_sys.append(inWS.data("{}_range{}".format(sys,i)))
+    mass_sig.setBins(50)
 
-      dh_sys.SetName("data_{}_{}_{}".format(cat,proc,sys))
+    dataFull = inWS.data("norm_range%i"%effl).Clone()
+
+    for sys in sysname:
+      dh_full_sys = inWS.data("{}_range{}".format(sys,effl)).Clone()
+      dh_sys = ROOT.RooDataHist("data_{}_{}_{}".format(cat,proc,sys),"data_{}_{}_{}".format(cat,proc,sys), ROOT.RooArgSet(mass_sig), dh_full_sys)
+      for i in range(effl+1, effh):
+        dh_sys.add(inWS.data("{}_range{}".format(sys,i)))
+
+#      dh_sys.SetName("data_{}_{}_{}".format(cat,proc,sys))
       a1_dcb_sys = ROOT.RooRealVar("{}_{}_a1_{}".format(cat,proc,sys), "{}_{}_a1_{}".format(cat,proc,sys), 2.5, .1, 5) 
       a2_dcb_sys = ROOT.RooRealVar("{}_{}_a2_{}".format(cat,proc,sys), "{}_{}_a2_{}".format(cat,proc,sys), 2.5, .1, 5)
       dm_dcb_sys = ROOT.RooRealVar("{}_{}_mean_cbe_nom".format(cat,proc), "{}_{}_mean_cbe_nom".format(cat,proc), 125, 124, 126) #-0.1,-1,1

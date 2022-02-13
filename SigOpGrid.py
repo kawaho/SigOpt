@@ -1,4 +1,4 @@
-import os, time, sys, glob, math, array, argparse
+import os, time, sys, glob, math, array, argparse, subprocess
 from ROOT import TFile
 from writedatacard import writedatacard
 from fitSB_CBE import fit, GetNBkg 
@@ -190,4 +190,4 @@ while gain>1:
   n+=1
 
 fResults.write("done")
-runCMD('source clean.sh')
+subprocess.call("./clean.sh", shell=True)

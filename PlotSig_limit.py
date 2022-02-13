@@ -332,6 +332,7 @@ while run:
     fResults.write("MVA Cuts: %s\n"%str(mvaCuts))
 
     print "Final Cats ", cats
+    print "Final Cats on Paper", [100-(i+1) for i in cats]
     print "Cat Diff ", catdiff
     print "MVA Cuts ", mvaCuts
     print "Final Sig: ", maxCombprev, " Lim: ", minLim
