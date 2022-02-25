@@ -2,7 +2,7 @@ import ROOT
 ROOT.gROOT.SetBatch(True)
 list_of_hist = []
 outfile = ROOT.TFile("Signal.root", "recreate")
-for cat in ['ggcat0','ggcat1','ggcat2','vbfcat0','vbfcat1']:
+for cat in ['ggcat0','ggcat1','ggcat2','ggcat3','vbfcat0','vbfcat1']:
   infile = ROOT.TFile("Workspaces/workspace_sig_"+cat+".root")
   ws = infile.Get("w_13TeV")
   mass = ws.var("CMS_emu_Mass")
@@ -17,7 +17,6 @@ for cat in ['ggcat0','ggcat1','ggcat2','vbfcat0','vbfcat1']:
   hist_vbf.Scale(pdf_vbf_norm)
 
   hist_gg.Add(hist_vbf)
-#  hist_gg.Scale(pdf_vbf_norm+pdf_gg_norm)
   hist_gg.SetName(cat)  
   
   outfile.cd()

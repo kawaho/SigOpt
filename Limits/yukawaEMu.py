@@ -77,7 +77,7 @@ yf.append(yf[0])
 xf = array('f', xf)
 yf = array('f', yf)
 grf2 = r.TGraph(2*npf+1,xf,yf)
-grf2.SetFillColor(r.kYellow-7) #kyellow
+grf2.SetFillColor(800)#r.kYellow-7) #kyellow
 grf2.SetLineWidth(0)
 grf2.Draw("f")
 
@@ -93,13 +93,13 @@ yf.append(yf[0])
 
 yf = array('f', yf)
 grf1 = r.TGraph(2*npf+1,xf,yf)
-grf1.SetFillColor(r.kGreen+1) #kyellow
+grf1.SetFillColor(417)#r.kGreen+1) #kyellow
 grf1.SetLineWidth(0)
 grf1.Draw("f")
 
 #expected, mu->e+gamma, mu->3e, mu->e
-inDirectLim = [(1.5e-6)**2, (3.1e-5)**2, (4.6e-5)**2, YLimitExpect[2]]
-colors = [r.kPink+1, r.kBlue, r.kWhite, r.kRed+1]
+inDirectLim = [(1.5e-6)**2, (1.2e-5)**2, (3.1e-5)**2, YLimitExpect[2]]
+colors = [r.kAzure-4, r.kWhite, r.kWhite, r.kRed+1]
 Limits, lines = [], []
 for lim, color in zip(inDirectLim, colors):
   Limits.append(r.TF1("","sqrt([0]-x*x)",ymin,math.sqrt(lim)))
@@ -130,11 +130,12 @@ yf += [ExpectedPlusTwoSigmaLimitCombined.Eval(xf[npf+i]) for i in range(npf)]
 yf.append(yf[0])
 yf = array('f', yf)
 grf3 = r.TGraph(2*npf+1,xf,yf)
-grf3.SetFillColor(r.kGreen+4)
+grf3.SetFillStyle(3013)
+grf3.SetFillColor(r.kCyan+4)
 grf3.Draw("lf")
 
 grfl = []
-color_gr = [r.kCyan-9, r.kCyan, r.kCyan+2]
+color_gr = [r.kCyan-5, r.kCyan-10, r.kGray]#r.kCyan+3]
 for k in range(3):
   yf =  [ Limits[k].Eval(xf[i]) for i in range(npf)]
   if k!=2:
@@ -191,9 +192,12 @@ for lim, label in zip(GuideLim, ['10^{-5}', '10^{-6}', '10^{-7}', '10^{-8}']):
   tt[-1].SetTextAngle(-90)
   tt[-1].Draw()
 
-labels = ['#mu#rightarrow e#gamma', '#mu#rightarrow 3e', '#mu#rightarrow e conv.', 'expected H#rightarrow e#mu']
+labels = ['#mu#rightarrow e#gamma', '#mu#rightarrow e conv.', '#mu#rightarrow 3e', 'expected H#rightarrow e#mu']
 for i in range(len(inDirectLim)):
-  tt.append(r.TLatex(ymin*1.2,1.1*math.sqrt(inDirectLim[i]),labels[i]))
+  if i<2:
+    tt.append(r.TLatex(ymin*1.2,0.7*math.sqrt(inDirectLim[i]),labels[i]))
+  else:
+    tt.append(r.TLatex(ymin*1.2,1.1*math.sqrt(inDirectLim[i]),labels[i]))
   tt[-1].SetTextAlign(11)
   tt[-1].SetTextSize(0.03)
   tt[-1].SetTextColor(colors[i])

@@ -1,4 +1,4 @@
-combineCards.py ggcat0=../Datacards/datacard_ggcat0.txt ggcat1=../Datacards/datacard_ggcat1.txt ggcat2=../Datacards/datacard_ggcat2.txt vbfcat0=../Datacards/datacard_vbfcat0.txt vbfcat1=../Datacards/datacard_vbfcat1.txt > ../Datacards/datacard_comb.txt
+#combineCards.py ggcat0=../Datacards/datacard_ggcat0.txt ggcat1=../Datacards/datacard_ggcat1.txt ggcat2=../Datacards/datacard_ggcat2.txt vbfcat0=../Datacards/datacard_vbfcat0.txt vbfcat1=../Datacards/datacard_vbfcat1.txt > ../Datacards/datacard_comb.txt
 
 i="comb"
 echo $i

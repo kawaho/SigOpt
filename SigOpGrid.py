@@ -18,13 +18,13 @@ parser.add_argument(
     "--bkg",
     action="store",
     dest="bkg",
-    default="bern1",
+    default="bern3",
     help="Which bkg model")
 parser.add_argument(
     "--cat",
     action="store",
     dest="cat",
-    default="VBFcat",
+    default="GGcat",
     help="Which category")
 parser.add_argument(
     "--expectedSig",

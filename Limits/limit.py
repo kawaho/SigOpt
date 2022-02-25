@@ -14,7 +14,7 @@ def ComputeSumYLimit(BranchingRatio = 0.1):
   return LimitOnSumY
 
 gROOT.SetBatch(True)
-catnames = ["Combined","vbfcat1","vbfcat0","ggcat2","ggcat1","ggcat0"]
+catnames = ["Combined","vbfcat1","vbfcat0","ggcat3","ggcat2","ggcat1","ggcat0"]
 ncats = len(catnames)
 limits = []
 for c in catnames:
@@ -42,6 +42,8 @@ print "==============================="
 print "          YUKAWA LIMIT         "
 print "==============================="
 
+for l in limits:
+  print "\t < %2.6f"%(math.sqrt(ComputeSumYLimit(l[2]/1e4)))
 yukawa = math.sqrt(ComputeSumYLimit(limits[0][2]/1e4))
 print "   Yukawa limit: < %2.6f   "%(yukawa)
 
@@ -82,7 +84,7 @@ for i in range(ncats):
 print channels
 PLOTLIMIT.cd()
 
-y_max = 20
+y_max = 14
 h = TH2F("h", "test", 0, 0, y_max, ncats, 0, ncats)
 for ch in channels:
   h.Fill(1, ch, 0)

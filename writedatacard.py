@@ -5,6 +5,11 @@ procs = ['GGLFV', 'VBFLFV', 'bkg', 'data_obs']
 datacard = []
 ws = []
 CMSnames = {
+'mTrg': 'CMS_trig_mu',
+'mID': 'CMS_id_mu',
+'mIso': 'CMS_iso_mu',
+'eReco': 'CMS_reco_e',
+'eID': 'CMS_id_e',
 'jesAbsolute': 'CMS_scale_j_Absolute',
 'jesAbsolute_2016': 'CMS_scale_j_Absolute_2016',
 'jesAbsolute_2017': 'CMS_scale_j_Absolute_2017',
@@ -178,9 +183,9 @@ def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False):
       else:
         f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('pdf_Higgs_qqbar_ACCEPT','lnN','-',str(round(1+acceptance_pdf_scale_vbf,3)),'-'))
 
-      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_Trigger_emu_13TeV','lnN','1.02','1.02','-'))
-      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_eff_e','lnN','1.02','1.02','-'))
-      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_eff_m','lnN','1.02','1.02','-'))
+#      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_Trigger_emu_13TeV','lnN','1.02','1.02','-'))
+#      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_eff_e','lnN','1.02','1.02','-'))
+#      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_eff_m','lnN','1.02','1.02','-'))
       yrratio = calyratio(df_gg, df_vbf)
       f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_lumi_2016_13TeV','lnN', str(round(1+.012*yrratio[0][0],3)), str(round(1+.012*yrratio[0][1],3)),'-'))
       f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_lumi_2017_13TeV','lnN', str(round(1+.023*yrratio[1][0],3)), str(round(1+.023*yrratio[1][1],3)),'-'))
@@ -250,4 +255,5 @@ def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False):
 #        else:
 #          f.write('CMS_hem_nuisance_res_m_%s_%s    param  0  %.3f\n'%(cat, proc2, 0.001))
     else:
-      f.write('pdfindex_' +cat+'_13TeV    discrete\n') 
+      f.write('pdfindex_' +cat+'_13TeV    discrete\n')
+#signalMultiplier rateParam * *LFV 0.01\n') 

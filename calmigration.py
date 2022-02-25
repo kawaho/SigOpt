@@ -18,8 +18,8 @@ def make2side(sysname):
         sysname[key]['Down'] = 1#round(1./value['Up'], 3)
       else:
         sysname[key]['Up'] = 1#round(1./value['Down'], 3)
-    if smallUnc(value['Up']) and smallUnc(value['Down']):
-      sysname[key]['Up'], sysname[key]['Down'] = -1, -1
+#    if smallUnc(value['Up']) and smallUnc(value['Down']):
+#      sysname[key]['Up'], sysname[key]['Down'] = -1, -1
 #    if smallUnc(value['Up']):
 #      sysname[key]['Up'] = 1
 #    if smallUnc(value['Down']):
@@ -30,8 +30,8 @@ def calmigration(df):
   jetUnc = ['jesAbsolute', 'jesBBEC1', 'jesFlavorQCD', 'jesEC2', 'jesHF', 'jesRelativeBal', 'UnclusteredEn']
   jetyearUnc = sum([['jer_'+year, 'jesAbsolute_'+year, 'jesBBEC1_'+year, 'jesEC2_'+year, 'jesHF_'+year, 'jesRelativeSample_'+year] for year in ['2017', '2018', '2016']], [])
   sfUnc = sum([['pu_'+year, 'bTag_'+year] for year in ['2017', '2018', '2016preVFP', '2016postVFP']], [])
-  sfUnc += ['pf_2016preVFP', 'pf_2016postVFP', 'pf_2017']
-  leptonUnc = ['me']#['ees', 'eer', 'me']
+  sfUnc += ['pf_2016preVFP', 'pf_2016postVFP', 'pf_2017', 'mID', 'mIso', 'mTrg', 'eReco', 'eID']
+  leptonUnc = ['me', 'ees', 'eer']
   sys = jetUnc+jetyearUnc+sfUnc+leptonUnc
 
   #Get nomial weight
