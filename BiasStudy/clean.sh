@@ -1,2 +1,2 @@
 rm *Gen*
-rm *.root
+rm roostats-*

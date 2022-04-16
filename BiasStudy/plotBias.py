@@ -1,13 +1,11 @@
-import ROOT
-import os
+import ROOT, re, os
 from datetime import datetime
-import re
 if not os.path.exists('BiasPlot'):
   os.makedirs('BiasPlot')
 ROOT.gSystem.Load("libHiggsAnalysisCombinedLimit.so");
 ROOT.gROOT.SetBatch(True)
-cats = ['ggcat0']#,'ggcat2','ggcat3']
-orders = [[1,1,1,1]]#,[1,1,2,1],[1,1,2,1]]
+cats = ['ggcat2']#,'ggcat1','ggcat2','ggcat3','vbfcat0','vbfcat1']
+orders = [[2,1,1]]#,[2,1,1],[3,1,1],[3,1,1],[1,1,1],[1,1,1]]
 
 bkgfile = ROOT.TFile('../Workspaces/CMS_Hemu_13TeV_multipdf.root')
 bkgWS = bkgfile.Get('multipdf')
@@ -28,8 +26,8 @@ for cat,order in zip(cats,orders):
     split_string = pdfname.split("_")
     if 'bern' in pdfname and not 'bern%i'%order[0] in pdfname: continue
     if 'exp' in pdfname and not 'exp%i'%order[1] in pdfname: continue
-    if 'lau' in pdfname and not 'lau%i'%order[2] in pdfname: continue
-    if 'pow' in pdfname and not 'pow%i'%order[3] in pdfname: continue
+    #if 'lau' in pdfname and not 'lau%i'%order[2] in pdfname: continue
+    if 'pow' in pdfname and not 'pow%i'%order[2] in pdfname: continue
     for j in range(numofpdfcat):
       pdfname2 = multipdf.getPdf(j).GetName()
       split_string2 = pdfname2.split("_")
@@ -40,18 +38,25 @@ for cat,order in zip(cats,orders):
         print "Fit Failed: Gen"+split_string[3]+"Fit"+split_string2[3]
         outfile.write(cat + " " + split_string[3] + " " + split_string2[3] +" is missing\n")
         continue
-      tree.Draw("(r-1)/(0.5*(rHiErr+rLoErr))>>h(100,-5,5)")
+      tree.Draw("(r-0.01)/(0.5*(rHiErr+rLoErr))>>h(100,-5,5)")
       h = ROOT.gPad.GetPrimitive("h")
+      h.Fit("gaus")
+      try:
+        h_mean = h.GetFunction("gaus").GetParameter(1)
+        h_sigma = h.GetFunction("gaus").GetParameter(2)
+      except:
+        h_mean = h.GetMean()
+        h_sigma = h.GetStdDev()
       h.SetTitle(cat+" Gen "+split_string[3]+" - Fit "+split_string2[3]+";Pull;");
       h.SetName('%sGen%sFit%s'%(cat,split_string[3],split_string2[3]))
       ROOT.gPad.SaveAs('BiasPlot/%sGen%sFit%s.png'%(cat,split_string[3],split_string2[3]))
-      print "Mean of bias of "+cat+" for pdf "+split_string[3]+" generated with pdf "+split_string2[3], h.GetMean()
-      print "Standard Deviation of bias", h.GetStdDev()
-      outfile.write(cat + " " + split_string[3] + " " + split_string2[3] +" "+ str(round(h.GetMean()*100,3)) + " " + str(round(h.GetStdDev(),3)) + "\n")
-      if abs(h.GetMean()*100) > 14:
-        biasTable[split_string2[3]][0] = False
-      else:
-        biasTable[split_string2[3]][1].append(h.GetMean()*100)
+      print "Mean of bias of "+cat+" for pdf "+split_string[3]+" generated with pdf "+split_string2[3], h_mean
+      print "Standard Deviation of bias", h_sigma
+      outfile.write(cat + " " + split_string[3] + " " + split_string2[3] +" "+ str(round(h_mean*100,3)) + " " + str(round(h_sigma,3)) + "\n")
+      #if abs(h.GetMean()*100) > 14:
+      #  biasTable[split_string2[3]][0] = False
+      #else:
+      #  biasTable[split_string2[3]][1].append(h.GetMean()*100)
       file_.Close()
   #minBias = 20
   #pdfname = ''

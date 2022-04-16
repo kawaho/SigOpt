@@ -3,7 +3,7 @@ import numpy as np
 
 #Listing lepton scale/smearing systematics
 leptonUnc = ['me']#['ees', 'eer', 'me']
-mass = r.RooRealVar("CMS_emu_Mass", "m_{e#mu}", 110, 160, "GeV")
+mass = r.RooRealVar("CMS_emu_Mass", "m_{e#mu}", 100, 160, "GeV")
 mva_dummy = r.RooRealVar("mva", "mva", 0, 1)
 weight_dummy = r.RooRealVar("weight", "weight", -20, 20)
 mva_sys_dummy = {}
