@@ -37,23 +37,27 @@ CMSnames = {
 'eer': 'CMS_res_e',
 'ees': 'CMS_scale_e',
 'me': 'CMS_scale_m',
-'pu_2016preVFP': 'CMS_pileup_2016preVFP',
-'pu_2016postVFP': 'CMS_pileup_2016postVFP',
+'pu_2016': 'CMS_pileup_2016',
 'pu_2017': 'CMS_pileup_2017',
 'pu_2018': 'CMS_pileup_2018',
-'pf_2016preVFP': 'CMS_prefiring_2016preVFP',
-'pf_2016postVFP': 'CMS_prefiring_2016postVFP',
+'pf_2016': 'CMS_prefiring_2016',
 'pf_2017': 'CMS_prefiring_2017',
-'bTag_2016preVFP': 'CMS_eff_btag_2016preVFP',
-'bTag_2016postVFP': 'CMS_eff_btag_2016postVFP',
+'bTag_2016': 'CMS_eff_btag_2016',
 'bTag_2017': 'CMS_eff_btag_2017',
 'bTag_2018': 'CMS_eff_btag_2018',
 'UnclusteredEn': 'CMS_scale_met',
 }
   
-def addSyst(l,v):
-  if len(v) == 2 and v[0]!=-1:
-    vstr = "%.3f/%.3f"%(v[0],v[1])
+def addSyst(l,value):
+  if len(value) == 2:
+    if smallUnc(value[0]) and smallUnc(value[1]):
+      vstr = "-"
+ #   if smallUnc(value[0]):
+ #     value[0] = 1
+ #   if smallUnc(value[1]):
+ #     value[1] = 1
+    else: 
+      vstr = "%.3f/%.3f"%(value[0],value[1])
     l += "%-25s "%vstr
   else:
     l += "%-25s "%"-"
@@ -74,12 +78,16 @@ def calyratio(df_gg,df_vbf):
 #cats = [ggcat0,ggcat1]
 #bins = [[0,40],[40,100]]
 
-def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False):
-
+def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False, masspt=None):
+  bkg_func = {'ggcat0':'bern1', 'ggcat1':'bern3', 'ggcat2':'bern3', 'ggcat3':'bern2', 'vbfcat0':'bern1', 'vbfcat1':'bern1'}
   for cat in cats:
     print('Writing datacards for '+cat)
     if sys_:
-      f = open('Datacards/datacard_'+cat+'.txt','w')
+      if masspt:
+        f = open('Datacards/datacard_'+cat+'_'+masspt+'.txt','w')
+      else:
+        f = open('Datacards/datacard_'+cat+'.txt','w')
+   
     else:
       f = open('Datacards/datacard_'+cat+'_NoSys.txt','w')
 
@@ -89,18 +97,22 @@ def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False):
     f.write("---------------------------------------------\n")
     ws = '../Workspaces/workspace_sig_'+cat+'.root'
     ws2 = 'workspace_sig_'+cat+'.root'
-    dataws = '../Workspaces/CMS_Hemu_13TeV_multipdf.root'
+    if limit:
+      dataws = '../Workspaces/CMS_Hemu_13TeV_multipdf.root'
+    else:
+      dataws = '../Workspaces/CMS_Hemu_13TeV_multipdf_'+cat.split('_')[-1]+'.root'
     for proc in procs:
       if proc == 'bkg':
         if limit:
-          f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,dataws,'multipdf:env_pdf_'+cat+'_bern1'))
+          f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,dataws,'multipdf:env_pdf_'+cat+'_'+bkg_func[cat.split('_')[0]]))
         elif not sys_:
-          f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,dataws,'multipdf:CMS_hemu_'+cat+'_13TeV_bkgshape'))
+          f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,dataws,'multipdf:CMS_hemu_'+cat.split('_')[0]+'_13TeV_bkgshape'))
         else:
           f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,ws,'w_13TeV:pdf_'+cat+'_exp1'))
       elif proc == 'data_obs':
         if limit or not sys_:
-          f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,dataws,'multipdf:Data_13TeV_'+cat))
+          #f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,dataws,'multipdf:roohist_data_mass_'+cat.split('_')[0]))
+          f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,dataws,'multipdf:Data_13TeV_'+cat.split('_')[0]))
         else:
           f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,ws,'w_13TeV:roohist_data_mass_'+cat))
       else:
@@ -164,8 +176,7 @@ def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False):
       acceptance_pdf_scale_vbf = acceptance_pdf_scale_sign_vbf*math.sqrt(acceptance_scale_vbf**2+acceptance_pdf_vbf**2) 
 
 
-#      ps_vbf = df_vbf['weight_herwig']/df_vbf['weight']
-
+      ps_vbf = df_vbf['weight_herwig']/df_vbf['weight']
 #      print(QCDscale_ggH, QCDscale_qqH)
 #      print(acceptance_scale_gg, acceptance_scale_vbf)
 #      print(acceptance_pdf_gg, acceptance_pdf_vbf)
@@ -173,12 +184,12 @@ def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False):
       f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('pdf_Higgs_gg','lnN','1.032','-','-'))
       f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('pdf_Higgs_qqbar','lnN','-','1.021','-'))
 
-      if smallUnc(round(1+acceptance_pdf_scale_gg,3)):
+      if False:#smallUnc(1+acceptance_pdf_scale_gg):
         f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('pdf_Higgs_gg_ACCEPT','lnN','-','-','-'))
       else:
-        f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('pdf_Higgs_gg_ACCEPT','lnN',str(round(1+acceptance_pdf_scale_gg,3)),'-','-'))
+        f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('pdf_Higgs_gg_ACCEPT','lnN',str(round(1+acceptance_pdf_scale_gg,5)),'-','-'))
 
-      if smallUnc(round(1+acceptance_pdf_scale_vbf,3)):
+      if smallUnc(1+acceptance_pdf_scale_vbf,'check'):
         f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('pdf_Higgs_qqbar_ACCEPT','lnN','-','-','-'))
       else:
         f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('pdf_Higgs_qqbar_ACCEPT','lnN','-',str(round(1+acceptance_pdf_scale_vbf,3)),'-'))
@@ -187,10 +198,15 @@ def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False):
 #      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_eff_e','lnN','1.02','1.02','-'))
 #      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_eff_m','lnN','1.02','1.02','-'))
       yrratio = calyratio(df_gg, df_vbf)
-      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_lumi_2016_13TeV','lnN', str(round(1+.012*yrratio[0][0],3)), str(round(1+.012*yrratio[0][1],3)),'-'))
-      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_lumi_2017_13TeV','lnN', str(round(1+.023*yrratio[1][0],3)), str(round(1+.023*yrratio[1][1],3)),'-'))
-      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_lumi_2018_13TeV','lnN', str(round(1+.025*yrratio[2][0],3)), str(round(1+.025*yrratio[2][1],3)),'-'))
-#      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_ps','lnN','-',str(round(ps_vbf,3)),'-'))
+      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('lumi_13TeV_2016','lnN', str(round(1+.01*yrratio[0][0],3)), str(round(1+.01*yrratio[0][1],3)),'-'))
+      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('lumi_13TeV_2017','lnN', str(round(1+.02*yrratio[1][0],3)), str(round(1+.02*yrratio[1][1],3)),'-'))
+      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('lumi_13TeV_2018','lnN', str(round(1+.015*yrratio[2][0],3)), str(round(1+.015*yrratio[2][1],3)),'-'))
+      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('lumi_13TeV_correlated','lnN', str(round(1+.006*yrratio[0][0]+.009*yrratio[1][0]+.02*yrratio[2][0],3)), str(round(1+.006*yrratio[0][1]+.009*yrratio[1][1]+.02*yrratio[2][1],3)),'-'))
+      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('lumi_13TeV_1718','lnN', str(round(1+.006*yrratio[1][0]+.002*yrratio[2][0],3)), str(round(1+.006*yrratio[1][1]+.002*yrratio[2][1],3)),'-'))
+      if smallUnc(ps_vbf):
+        f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_ps','lnN','-','-','-'))
+      else:
+        f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_ps','lnN','-',str(round(ps_vbf,3)),'-'))
       
       sys = {'GGLFV':{}, 'VBLFV':{}}
       #print('Calculating migration for gg')
@@ -198,11 +214,24 @@ def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False):
       #print('Calculating migration for vbf')
       sys['VBLFV'] = calmigration(df_vbf)
       for key in sorted(sys['GGLFV']):
+        if key in ['mTrg', 'mID', 'mIso', 'eReco', 'eID']: continue
         lsyst = '%-35s  %-20s    '%(CMSnames[key],'lnN')
         sval = addSyst(lsyst, [sys['GGLFV'][key]['Down'],sys['GGLFV'][key]['Up']])
         sval = addSyst(sval, [sys['VBLFV'][key]['Down'], sys['VBLFV'][key]['Up']])
         sval = addSyst(sval, [])
         f.write("%s\n"%sval)
+
+      lsyst = '%-35s  %-20s    '%('CMS_eff_m','lnN')
+      sval = addSyst(lsyst, [sys['GGLFV']['mTrg']['Down']*sys['GGLFV']['mID']['Down']*sys['GGLFV']['mIso']['Down'],sys['GGLFV']['mTrg']['Up']*sys['GGLFV']['mID']['Up']*sys['GGLFV']['mIso']['Up']])
+      sval = addSyst(sval, [sys['VBLFV']['mTrg']['Down']*sys['VBLFV']['mID']['Down']*sys['VBLFV']['mIso']['Down'], sys['VBLFV']['mTrg']['Up']*sys['VBLFV']['mID']['Up']*sys['VBLFV']['mIso']['Up']])
+      sval = addSyst(sval, [])
+      f.write("%s\n"%sval)
+
+      lsyst = '%-35s  %-20s    '%('CMS_eff_e','lnN')
+      sval = addSyst(lsyst, [sys['GGLFV']['eReco']['Down']*sys['GGLFV']['eID']['Down'],sys['GGLFV']['eReco']['Up']*sys['GGLFV']['eID']['Up']])
+      sval = addSyst(sval, [sys['VBLFV']['eReco']['Down']*sys['VBLFV']['eID']['Down'], sys['VBLFV']['eReco']['Up']*sys['VBLFV']['eID']['Up']])
+      sval = addSyst(sval, [])
+      f.write("%s\n"%sval)
 
       f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('QCDscale_ggH','lnN', '1.039','-','-'))
       f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('QCDscale_qqH','lnN','-','1.005','-'))
@@ -255,5 +284,5 @@ def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False):
 #        else:
 #          f.write('CMS_hem_nuisance_res_m_%s_%s    param  0  %.3f\n'%(cat, proc2, 0.001))
     else:
-      f.write('pdfindex_' +cat+'_13TeV    discrete\n')
-#signalMultiplier rateParam * *LFV 0.01\n') 
+      f.write('pdfindex_' +cat.split('_')[0]+'_13TeV    discrete\n')
+#signalMultiplier rateParam * *LFV 0.01\nnuisance edit freeze signalMultiplier\n') 

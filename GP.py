@@ -1,0 +1,26 @@
+import ROOT as r
+r.gROOT.SetBatch(True)
+
+cat = 'ggcat2'
+inFile = r.TFile('dataws_final.root')
+inWS = inFile.Get("CMS_emu_workspace")
+dataFull = inWS.data("Data_13TeV_%s"%cat)
+mass = inWS.var('CMS_emu_Mass')
+mass.setRange(100,170)
+mass.setRange("full",100,170)
+mass.setBins(35)
+dataBlind = r.RooDataSet("Data_13TeV_%s_blind"%cat, "Data_13TeV_%s_blind"%cat, dataFull, r.RooArgSet(mass), "(CMS_emu_Mass>100) & (CMS_emu_Mass<170)")
+#thisdataBinned = r.RooDataHist("roohist_data_mass_cat%s"%cat,"data",r.RooArgSet(mass),dataFull)
+#ktest = r.RooKeysPdf("kest1", "kest1", mass, dataBlind, r.RooKeysPdf.MirrorBoth)
+a = r.RooRealVar("a", "a", .1, 0, 1.)
+k = r.RooRealVar("k", "k", .1, 0, 1.)
+ktest = r.RooGenericPdf("kest1", "kest1", "exp(-@2*(@0^@1))", r.RooArgList(mass,k,a))
+ktest.fitTo(dataBlind)
+frame = mass.frame()
+dataFull.plotOn(frame)
+ktest.plotOn(frame, r.RooFit.NormRange('full'))
+canv = r.TCanvas()
+frame.Draw()
+print frame.chiSquare(2)
+canv.SaveAs('picGP_test.png')
+

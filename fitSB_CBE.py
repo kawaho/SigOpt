@@ -8,8 +8,8 @@ def GetNBkg(dataWS, bins):
   #Fit data
   inWS = dataWS #datafile.Get("CMS_emu_workspace")
   mass = inWS.var("CMS_emu_Mass")
-  mass.setRange("R1",110.,115.)
-  mass.setRange("R2",135.,160.)
+  mass.setRange("R1",90.,115.)
+  mass.setRange("R2",135.,180.)
   nbkg = [0 for i in range(len(bins)-1)]
   for i in range(len(bins)-1):
     effl, effh = bins[i], bins[i+1]
@@ -18,7 +18,7 @@ def GetNBkg(dataWS, bins):
   return nbkg 
   
 
-def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_=True, bin_=True):
+def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_=True, bin_=True, masspt=125.):
   effl, effh = bins[0], bins[1]
   allvars = []
   fitstatus = 0
@@ -29,10 +29,10 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
   mass = inWS.var("CMS_emu_Mass")
   #if saveData:
   #  mass.setBins(50)
-  mass.setRange("higgsRange",110.,135.)
-  mass.setRange("higgsRange2",110.,160.)
-  mass.setRange("R1",110.,115.)
-  mass.setRange("R2",135.,160.)
+  mass.setRange("higgsRange",masspt-15.,masspt+10.)
+  mass.setRange("higgsRange2",90.,180.)
+  mass.setRange("R1",90.,115.)
+  mass.setRange("R2",135.,180.)
   db = inWS.data("data_norm_range%i"%effl).Clone()
   for i in range(effl+1, effh):
     db.append(inWS.data("data_norm_range%i"%i))
@@ -68,7 +68,7 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
   if makePlot:
     canvas = ROOT.TCanvas("canvas","",0,0,800,800)
     frame = mass.frame(ROOT.RooFit.Range("higgsRange2"))
-    db.plotOn(frame, ROOT.RooFit.CutRange("higgsRange2"), ROOT.RooFit.DataError(ROOT.RooAbsData.SumW2), ROOT.RooFit.Binning(110,110,160))
+    db.plotOn(frame, ROOT.RooFit.CutRange("higgsRange2"), ROOT.RooFit.DataError(ROOT.RooAbsData.SumW2), ROOT.RooFit.Binning(90,90,180))
     pdfb.plotOn(frame, ROOT.RooFit.Normalization(db.sumEntries("1", "higgsRange2"), ROOT.RooAbsReal.NumEvent), ROOT.RooFit.NormRange("higgsRange2"), ROOT.RooFit.Range("higgsRange2"))
     frame.Draw()
     canvas.SaveAs('Graphs/'+cat + "_"+str(effl) +"_"+str(effh)+"_bkg.png")
@@ -85,8 +85,8 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
   for inWS, proc in zip([ggWS, vbfWS],['ggH','qqH']):
     #inWS = rfile.Get("CMS_emu_workspace")
     mass_sig = inWS.var("CMS_emu_Mass")
-    mass_sig.setBins(50)
-
+    mass_sig.setBins(360)
+    mass_sig.setRange("higgsRange",masspt-15.,masspt+10.)
     dataFull = inWS.data("norm_range%i"%effl).Clone()
     if bin_:
       dh = ROOT.RooDataHist("data_{}_{}".format(cat,proc),"data_{}_{}".format(cat,proc), ROOT.RooArgSet(mass_sig), dataFull)
@@ -101,7 +101,7 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
     dh.SetName("data_{}_{}".format(cat,proc))
     a1_dcb = ROOT.RooRealVar("{}_{}_a1".format(cat,proc), "{}_{}_a1".format(cat,proc), 2.5, .1, 5) #2.5, .1, 5 #0.6, .2, 1 
     a2_dcb = ROOT.RooRealVar("{}_{}_a2".format(cat,proc), "{}_{}_a2".format(cat,proc), 2.5, .1, 5) #2.5, .1, 5 #1, .6, 1.4
-    dm_dcb = ROOT.RooRealVar("{}_{}_mean_cbe_nom".format(cat,proc), "{}_{}_mean_cbe_nom".format(cat,proc), 125, 124, 126) #-0.1,-1,1
+    dm_dcb = ROOT.RooRealVar("{}_{}_mean_cbe_nom".format(cat,proc), "{}_{}_mean_cbe_nom".format(cat,proc), masspt, masspt-1, masspt+1) #-0.1,-1,1
     dm_gaus = ROOT.RooRealVar("{}_{}_mean_gaus_nom".format(cat,proc), "{}_{}_mean_gaus_nom".format(cat,proc), 125, 124, 126) #-0.1,-1,1
     mean_err_e_cat = ROOT.RooRealVar("CMS_hem_nuisance_scale_e_{}_{}".format(cat,proc), "CMS_hem_nuisance_scale_e_{}_{}".format(cat,proc), 1.)
     mean_err_m_cat = ROOT.RooRealVar("CMS_hem_nuisance_scale_m_{}_{}".format(cat,proc), "CMS_hem_nuisance_scale_m_{}_{}".format(cat,proc), 1.)
@@ -113,7 +113,7 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
     mean_err_m.setConstant(ROOT.kTRUE)
     mean_dcb = ROOT.RooFormulaVar("{}_{}_mean_cbe".format(cat,proc), "{}_{}_mean_cbe".format(cat,proc), "(@0)*(1+@1*@2+@3*@4)", ROOT.RooArgList(dm_dcb, mean_err_e_cat, mean_err_e, mean_err_m_cat, mean_err_m))
     
-    n1_dcb = ROOT.RooRealVar("{}_{}_n1".format(cat,proc), "{}_{}_n1".format(cat,proc), 3.5, 2., 5.)  #3.5, 2., 5.
+    n1_dcb = ROOT.RooRealVar("{}_{}_n1".format(cat,proc), "{}_{}_n1".format(cat,proc), 3.5, 2., 10.)  #3.5, 2., 5.
 
     sigma_nom_dcb = ROOT.RooRealVar("{}_{}_sigma_cbe_nom".format(cat,proc), "{}_{}_sigma_nom_cbe".format(cat,proc), 2, 1., 2.5) #1.5, .8, 2
     sigma_err_e_cat = ROOT.RooRealVar("CMS_hem_nuisance_res_e_{}_{}".format(cat,proc), "CMS_hem_nuisance_res_e_{}_{}".format(cat,proc), 1.)
@@ -154,8 +154,8 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
       latex.SetTextAlign(31);
       latex.SetTextAlign(11);
       frame = mass_sig.frame(ROOT.RooFit.Range("higgsRange"), ROOT.RooFit.Title(" "))
-      dh.plotOn(frame, ROOT.RooFit.CutRange("higgsRange"), ROOT.RooFit.DataError(ROOT.RooAbsData.SumW2), ROOT.RooFit.Binning(25,110,135), ROOT.RooFit.Rescale(0.0059))
-      pdf.plotOn(frame, ROOT.RooFit.Normalization(dh.sumEntries("1", "higgsRange")*0.0059, ROOT.RooAbsReal.NumEvent))
+      dh.plotOn(frame, ROOT.RooFit.CutRange("higgsRange"), ROOT.RooFit.DataError(ROOT.RooAbsData.SumW2), ROOT.RooFit.Binning(25,masspt-15.,masspt+10.))#, ROOT.RooFit.Rescale(0.0059))
+      pdf.plotOn(frame, ROOT.RooFit.Normalization(dh.sumEntries("1", "higgsRange"), ROOT.RooAbsReal.NumEvent))
       fitted_parms = fitResult.floatParsFinal()
       iter_ = fitted_parms.createIterator()
       var = iter_.Next()
@@ -168,7 +168,7 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
       frame.SetTitle("");
       frame.SetXTitle("m_{e#mu} [GeV]");
       
-      frame.SetMaximum(frame.GetMaximum()*0.0059);
+      frame.SetMaximum(frame.GetMaximum());#*0.0059);
       frame.SetMinimum(0);
       frame.GetXaxis().SetTitleFont(42);
       frame.GetYaxis().SetTitleFont(42);
@@ -181,7 +181,8 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
       frame.GetXaxis().SetTitleOffset(1.2);
       frame.Draw();
 
-      label2 = cat + ", " + proc + " mode";
+      label2 = cat.split('_')[0] + ", " + proc + " mode";
+      label3 = cat.split('_')[1];
 
       lowX=0.65;
       lowY=0.83;
@@ -219,6 +220,19 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
       cattxt.AddText(label2);
       cattxt.Draw("same");
 
+      lowX=0.18;
+      lowY=0.59;
+      cattxt2  = ROOT.TPaveText(lowX, lowY+0.06, lowX+0.3, lowY+0.16, "NDC");
+      cattxt2.SetTextFont(42);
+      cattxt2.SetTextSize(0.055*0.8*0.76);
+      cattxt2.SetBorderSize(   0 );
+      cattxt2.SetFillStyle(    0 );
+      cattxt2.SetTextAlign(   12 );
+      cattxt2.SetTextColor(    1 );
+      cattxt2.AddText('m_{H} = %s GeV'%label3);
+      cattxt2.Draw("same");
+
+      lowY=0.64;
       #paramsbc = ROOT.RooArgList(pdf.getParameters(ROOT.RooArgSet(mass_sig))
       #massbc = ROOT.RooArgList(mass_sig)
       #h1bc = dh.createHistogram("CMS_emu_Mass", mass_sig)
@@ -270,7 +284,7 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
       pretxt.SetTextColor(    1 );
       pretxt.AddText("Preliminary");
       pretxt.Draw("same");
-      canvas.SaveAs('Graphs/'+cat + '_' + proc +"_CBE.png")
+      canvas.SaveAs('Graphs/'+cat + '_' + proc +'_'+str(int(masspt))+"_CBE.png")
 
     fitstatus += fitResult.status()
     
@@ -300,6 +314,8 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
 
     for sys in sysname:
       mass_sig_sys = inWS.var("CMS_emu_Mass_{}".format(sys))
+      mass_sig_sys.setRange("higgsRange",masspt-15.,masspt+10.)
+
       dh_full_sys = inWS.data("{}_range{}".format(sys,effl)).Clone()
       if bin_:
         dh_sys = ROOT.RooDataHist("data_{}_{}_{}".format(cat,proc,sys),"data_{}_{}_{}".format(cat,proc,sys), ROOT.RooArgSet(mass_sig_sys), dh_full_sys)
@@ -313,7 +329,7 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
       dh_sys.SetName("data_{}_{}_{}".format(cat,proc,sys))
       a1_dcb_sys = ROOT.RooRealVar("{}_{}_a1_{}".format(cat,proc,sys), "{}_{}_a1_{}".format(cat,proc,sys), 2.5, .1, 5) 
       a2_dcb_sys = ROOT.RooRealVar("{}_{}_a2_{}".format(cat,proc,sys), "{}_{}_a2_{}".format(cat,proc,sys), 2.5, .1, 5)
-      dm_dcb_sys = ROOT.RooRealVar("{}_{}_mean_cbe_nom".format(cat,proc), "{}_{}_mean_cbe_nom".format(cat,proc), 125, 124, 126) #-0.1,-1,1
+      dm_dcb_sys = ROOT.RooRealVar("{}_{}_mean_cbe_nom".format(cat,proc), "{}_{}_mean_cbe_nom".format(cat,proc), masspt, masspt-1, masspt+1) #-0.1,-1,1
       mean_err_sys = ROOT.RooRealVar("CMS_hem_nuisance_scale_{}_{}".format(cat,proc), "CMS_hem_nuisance_scale_{}_{}".format(cat,proc), 0., -.1, .1)
       mean_dcb_sys = ROOT.RooFormulaVar("{}_{}_mean_cbe".format(cat,proc), "{}_{}_mean_cbe".format(cat,proc), "(@0)*(1+@1)", ROOT.RooArgList(dm_dcb_sys, mean_err_sys))
       
@@ -376,6 +392,7 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, makePlot=False, saveData=True, sys_
 #  ROOT.gDirectory.Add(w)
   
   w.Print()
+  print(dh)
   w.writeToFile(filename)
   f.close()
   return fitstatus, numofeventb, numofevent
