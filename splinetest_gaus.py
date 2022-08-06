@@ -145,7 +145,7 @@ for c_index, cat in enumerate(['ggHcat0','ggHcat1', 'ggHcat2', 'ggHcat3', 'VBFca
      
       print(cat,prod,order_frac)
       print('1',prod,order_frac_err)
-      if orders[prod][c_index]==3: 
+      if orders[prod][c_index]==3 and order_frac_err[-1]!=0: 
         order_frac_err = [order_frac_err[0],math.sqrt( (order_frac_err[2]/(1-order_frac[0]))**2+(order_frac_err[0]*order_frac[2]/(1-order_frac[0])**2)**2 ) ,0]
       print(cat,prod,order_frac_err)
       err_ref[ii] = {'sigfrac':order_frac_err, 'mean':order_mean_err, 'sigma':order_sigma_err, 'norm':norm_err}
@@ -176,8 +176,7 @@ for c_index, cat in enumerate(['ggHcat0','ggHcat1', 'ggHcat2', 'ggHcat3', 'VBFca
       if 'norm' in spline_name:
         plot.SetYTitle("normalization")
       else:
-        print(spline_name)
-        plot.SetYTitle(spline_name.split('_')[2]+spline_name[-1])
+        plot.SetYTitle(spline_name.split('_')[2].replace('sigfrac','frac')+spline_name[-1])
      # elif 'mean' in spline_name:
      #   plot.SetYTitle("#mu")
      # elif 'n1' in spline_name:

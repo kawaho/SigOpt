@@ -142,7 +142,7 @@ def fit(dataWS, ggWS, vbfWS, bkg, bins, cat, norder, makePlot=False, saveData=Tr
       subpdf.append(ROOT.RooGaussian("{}_{}_pdf_order{}".format(cat,proc,i), "{}_{}_pdf_order{}".format(cat,proc,i), mass_sig, mean_dcb[-1], sigma_dcb[-1]))
       gaus_List.add(subpdf[-1])
       if i!=norder[proc]-1:
-        sigfrac.append(ROOT.RooRealVar("{}_{}_sigfrac_order{}".format(cat,proc,i),"{}_{}_sigfrac_order{}".format(cat,proc,i),0.6+i*0.1,0.,1.))
+        sigfrac.append(ROOT.RooRealVar("{}_{}_sigfrac_order{}".format(cat,proc,i),"{}_{}_sigfrac_order{}".format(cat,proc,i),0.6+i*0.2,0.,1.))
         frac_List.add(sigfrac[-1])
 
     pdf = ROOT.RooAddPdf("{}_{}_pdf".format(cat,proc), "{}_{}_pdf".format(cat,proc), gaus_List, frac_List, True)
