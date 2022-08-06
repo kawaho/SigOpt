@@ -1,13 +1,13 @@
 import ROOT as r
 import numpy as np
 r.gROOT.SetBatch(True)
-masspts = ['120','125','130']
+masspts = ['110','120','125','130','140','150','160']
 binning = [float(masspts[0]), float(masspts[-1])+1] + [(float(masspts[i])+float(masspts[i+1]))/2 for i in range(len(masspts)-1)]
 binning.sort()
 print np.array(binning)
-cats = ['ggcat0','ggcat1','ggcat2','ggcat3','vbfcat0','vbfcat1']
+cats = ['ggcat0','ggcat1','ggcat2','ggcat3','vbfcat0','vbfcat1','vbfcat2']
 workspaces = ['Workspaces/workspace_sig_{cat}_{masspts}.root']
-mh = r.RooRealVar('MH','MH',125,120,130)
+mh = r.RooRealVar('MH','MH',125,100,170)
 e_res_hist, e_scale_hist, m_res_hist, m_scale_hist = [], [], [], []
 e_res_datahist, e_scale_datahist, m_res_datahist, m_scale_datahist = [], [], [], []
 e_res_func, e_scale_func, m_res_func, m_scale_func = [], [], [], []
@@ -22,7 +22,7 @@ for cat in cats:
       ws = infile.Get("w_13TeV")
       mass_sig = ws.var("CMS_emu_Mass")
       dh.append(ws.data('data_%s_%s_%s'%(cat,masspt,prod)))
-      params['norm'].append(ws.var('%s_%s_%s_pdf_norm'%(cat,masspt,prod)).getValV()/100)
+      params['norm'].append(ws.var('%s_%s_%s_pdf_norm'%(cat,masspt,prod)).getValV())
       params['dm'].append(ws.var('%s_%s_%s_mean_cbe_nom'%(cat,masspt,prod)).getValV())
       params['sigma'].append(ws.var('%s_%s_%s_sigma_cbe_nom'%(cat,masspt,prod)).getValV())
       params['a1'].append(ws.var('%s_%s_%s_a1'%(cat,masspt,prod)).getValV())

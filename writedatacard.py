@@ -35,7 +35,7 @@ CMSnames = {
 'jer_2017': 'CMS_res_j_2017',
 'jer_2018': 'CMS_res_j_2018',
 'eer': 'CMS_res_e',
-'ees': 'CMS_scale_e',
+'ess': 'CMS_scale_e',
 'me': 'CMS_scale_m',
 'pu_2016': 'CMS_pileup_2016',
 'pu_2017': 'CMS_pileup_2017',
@@ -78,18 +78,23 @@ def calyratio(df_gg,df_vbf):
 #cats = [ggcat0,ggcat1]
 #bins = [[0,40],[40,100]]
 
-def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False, masspt=None):
+def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False, masspt=None, useGaus=False, ShapeUnc=False):
+  systable = {} 
   bkg_func = {'ggcat0':'bern1', 'ggcat1':'bern3', 'ggcat2':'bern3', 'ggcat3':'bern2', 'vbfcat0':'bern1', 'vbfcat1':'bern1'}
   for cat in cats:
+    systable[cat] = {'jet':[999,-999], 'unc':[999,-999], 'b':[999,-999], 'pf':[999,-999], 'pu':[999,-999], 'muon':[999,-999], 'electron':[999,-999], 'QCDacc_gg':0, 'QCDacc_vbf':0,'PDFacc_gg':0,'PDFacc_vbf':0,'Parton':0, 'others':[999,-999]}
     print('Writing datacards for '+cat)
-    if sys_:
-      if masspt:
-        f = open('Datacards/datacard_'+cat+'_'+masspt+'.txt','w')
-      else:
-        f = open('Datacards/datacard_'+cat+'.txt','w')
-   
-    else:
-      f = open('Datacards/datacard_'+cat+'_NoSys.txt','w')
+    file_string = 'Datacards/datacard_'+cat
+    if masspt:
+      file_string+='_'+masspt
+    if not sys_:
+      file_string+='_NoSys'
+    if ShapeUnc:
+       file_string+='_ShapeUnc'
+    if useGaus:
+       file_string+='_gaus'
+
+    f = open(file_string+'.txt','w')
 
     f.write("imax *\n")
     f.write("jmax *\n")
@@ -97,20 +102,23 @@ def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False, m
     f.write("---------------------------------------------\n")
     ws = '../Workspaces/workspace_sig_'+cat+'.root'
     ws2 = 'workspace_sig_'+cat+'.root'
-    if limit:
+    if useGaus:
+      ws = ws.replace('.root','_gaus.root')
+      ws2 = ws2.replace('.root','_gaus.root')
+    if limit or ShapeUnc:
       dataws = '../Workspaces/CMS_Hemu_13TeV_multipdf.root'
     else:
       dataws = '../Workspaces/CMS_Hemu_13TeV_multipdf_'+cat.split('_')[-1]+'.root'
     for proc in procs:
       if proc == 'bkg':
-        if limit:
-          f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,dataws,'multipdf:env_pdf_'+cat+'_'+bkg_func[cat.split('_')[0]]))
+        if limit or ShapeUnc:
+          f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,dataws,'multipdf:env_pdf_'+cat.split('_')[0]+'_'+bkg_func[cat.split('_')[0]]))
         elif not sys_:
           f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,dataws,'multipdf:CMS_hemu_'+cat.split('_')[0]+'_13TeV_bkgshape'))
         else:
           f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,ws,'w_13TeV:pdf_'+cat+'_exp1'))
       elif proc == 'data_obs':
-        if limit or not sys_:
+        if limit or not sys_ or ShapeUnc:
           #f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,dataws,'multipdf:roohist_data_mass_'+cat.split('_')[0]))
           f.write("shapes      %-10s %-10s %-20s %s\n"%(proc,cat,dataws,'multipdf:Data_13TeV_'+cat.split('_')[0]))
         else:
@@ -188,11 +196,12 @@ def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False, m
         f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('pdf_Higgs_gg_ACCEPT','lnN','-','-','-'))
       else:
         f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('pdf_Higgs_gg_ACCEPT','lnN',str(round(1+acceptance_pdf_scale_gg,5)),'-','-'))
-
+      systable[cat]['QCDacc_gg'] = round(acceptance_pdf_scale_gg*100,3)
       if smallUnc(1+acceptance_pdf_scale_vbf,'check'):
         f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('pdf_Higgs_qqbar_ACCEPT','lnN','-','-','-'))
       else:
         f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('pdf_Higgs_qqbar_ACCEPT','lnN','-',str(round(1+acceptance_pdf_scale_vbf,3)),'-'))
+      systable[cat]['QCDacc_vbf'] = round(acceptance_pdf_scale_vbf*100,3)
 
 #      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_Trigger_emu_13TeV','lnN','1.02','1.02','-'))
 #      f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_eff_e','lnN','1.02','1.02','-'))
@@ -203,18 +212,39 @@ def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False, m
       f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('lumi_13TeV_2018','lnN', str(round(1+.015*yrratio[2][0],3)), str(round(1+.015*yrratio[2][1],3)),'-'))
       f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('lumi_13TeV_correlated','lnN', str(round(1+.006*yrratio[0][0]+.009*yrratio[1][0]+.02*yrratio[2][0],3)), str(round(1+.006*yrratio[0][1]+.009*yrratio[1][1]+.02*yrratio[2][1],3)),'-'))
       f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('lumi_13TeV_1718','lnN', str(round(1+.006*yrratio[1][0]+.002*yrratio[2][0],3)), str(round(1+.006*yrratio[1][1]+.002*yrratio[2][1],3)),'-'))
+
       if smallUnc(ps_vbf):
         f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_ps','lnN','-','-','-'))
       else:
         f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('CMS_ps','lnN','-',str(round(ps_vbf,3)),'-'))
+      systable[cat]['Parton'] = round(abs(1-ps_vbf)*100,3)
       
       sys = {'GGLFV':{}, 'VBLFV':{}}
       #print('Calculating migration for gg')
       sys['GGLFV'] = calmigration(df_gg) 
       #print('Calculating migration for vbf')
       sys['VBLFV'] = calmigration(df_vbf)
+      for subproc in sys:
+        for subsys in sys[subproc]:
+          min_subsys, max_subsys = sorted(tuple((round(abs(sys[subproc][subsys]['Up']-1)*100,3), round(abs(sys[subproc][subsys]['Down']-1)*100,3))))
+          if 'jer' in subsys or 'jes' in subsys:
+            which_systable = 'jet'
+          elif 'pu' in subsys:
+            which_systable = 'pu'
+          elif 'bTag' in subsys:
+            which_systable = 'b'
+          elif 'UnclusteredEn' in subsys:
+            which_systable = 'unc'
+          elif 'pf' in subsys:
+            which_systable = 'pf'
+          else:
+            which_systable = 'others'
+          if min_subsys < systable[cat][which_systable][0]:  systable[cat][which_systable][0]=min_subsys
+          if max_subsys > systable[cat][which_systable][1]:  systable[cat][which_systable][1]=max_subsys
+
+
       for key in sorted(sys['GGLFV']):
-        if key in ['mTrg', 'mID', 'mIso', 'eReco', 'eID']: continue
+        if key in ['mTrg', 'mID', 'mIso', 'eReco', 'eID', 'eIso', 'eTrig']: continue
         lsyst = '%-35s  %-20s    '%(CMSnames[key],'lnN')
         sval = addSyst(lsyst, [sys['GGLFV'][key]['Down'],sys['GGLFV'][key]['Up']])
         sval = addSyst(sval, [sys['VBLFV'][key]['Down'], sys['VBLFV'][key]['Up']])
@@ -222,14 +252,29 @@ def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False, m
         f.write("%s\n"%sval)
 
       lsyst = '%-35s  %-20s    '%('CMS_eff_m','lnN')
-      sval = addSyst(lsyst, [sys['GGLFV']['mTrg']['Down']*sys['GGLFV']['mID']['Down']*sys['GGLFV']['mIso']['Down'],sys['GGLFV']['mTrg']['Up']*sys['GGLFV']['mID']['Up']*sys['GGLFV']['mIso']['Up']])
-      sval = addSyst(sval, [sys['VBLFV']['mTrg']['Down']*sys['VBLFV']['mID']['Down']*sys['VBLFV']['mIso']['Down'], sys['VBLFV']['mTrg']['Up']*sys['VBLFV']['mID']['Up']*sys['VBLFV']['mIso']['Up']])
+      muon_gg_combined = [sys['GGLFV']['mTrg']['Down']*sys['GGLFV']['mID']['Down']*sys['GGLFV']['mIso']['Down'],sys['GGLFV']['mTrg']['Up']*sys['GGLFV']['mID']['Up']*sys['GGLFV']['mIso']['Up']]
+      muon_vbf_combined = [sys['VBLFV']['mTrg']['Down']*sys['VBLFV']['mID']['Down']*sys['VBLFV']['mIso']['Down'], sys['VBLFV']['mTrg']['Up']*sys['VBLFV']['mID']['Up']*sys['VBLFV']['mIso']['Up']] 
+      electron_gg_combined = [sys['GGLFV']['eReco']['Down']*sys['GGLFV']['eID']['Down']*sys['GGLFV']['eIso']['Down']*sys['GGLFV']['eTrig']['Down'],sys['GGLFV']['eReco']['Up']*sys['GGLFV']['eID']['Up']*sys['GGLFV']['eIso']['Up']*sys['GGLFV']['eTrig']['Up']]
+      electron_vbf_combined = [sys['VBLFV']['eReco']['Down']*sys['VBLFV']['eID']['Down']*sys['VBLFV']['eIso']['Down']*sys['VBLFV']['eTrig']['Down'], sys['VBLFV']['eReco']['Up']*sys['VBLFV']['eID']['Up']*sys['VBLFV']['eIso']['Up']*sys['VBLFV']['eTrig']['Up']] 
+
+      min_subsys = min( round(abs(muon_gg_combined[0]-1)*100,3), round(abs(muon_gg_combined[1]-1)*100,3), round(abs(muon_vbf_combined[0]-1)*100,3), round(abs(muon_vbf_combined[1]-1)*100,3) )
+      max_subsys = max( round(abs(muon_gg_combined[0]-1)*100,3), round(abs(muon_gg_combined[1]-1)*100,3), round(abs(muon_vbf_combined[0]-1)*100,3), round(abs(muon_vbf_combined[1]-1)*100,3) )
+      if min_subsys < systable[cat]['muon'][0]:  systable[cat]['muon'][0]=min_subsys
+      if max_subsys > systable[cat]['muon'][1]:  systable[cat]['muon'][1]=max_subsys
+
+      min_subsys = min( round(abs(electron_gg_combined[0]-1)*100,3), round(abs(electron_gg_combined[1]-1)*100,3), round(abs(electron_vbf_combined[0]-1)*100,3), round(abs(electron_vbf_combined[1]-1)*100,3) )
+      max_subsys = max( round(abs(electron_gg_combined[0]-1)*100,3), round(abs(electron_gg_combined[1]-1)*100,3), round(abs(electron_vbf_combined[0]-1)*100,3), round(abs(electron_vbf_combined[1]-1)*100,3) )
+      if min_subsys < systable[cat]['electron'][0]:  systable[cat]['electron'][0]=min_subsys
+      if max_subsys > systable[cat]['electron'][1]:  systable[cat]['electron'][1]=max_subsys
+
+      sval = addSyst(lsyst, muon_gg_combined)
+      sval = addSyst(sval, muon_vbf_combined)
       sval = addSyst(sval, [])
       f.write("%s\n"%sval)
 
       lsyst = '%-35s  %-20s    '%('CMS_eff_e','lnN')
-      sval = addSyst(lsyst, [sys['GGLFV']['eReco']['Down']*sys['GGLFV']['eID']['Down'],sys['GGLFV']['eReco']['Up']*sys['GGLFV']['eID']['Up']])
-      sval = addSyst(sval, [sys['VBLFV']['eReco']['Down']*sys['VBLFV']['eID']['Down'], sys['VBLFV']['eReco']['Up']*sys['VBLFV']['eID']['Up']])
+      sval = addSyst(lsyst, electron_gg_combined)
+      sval = addSyst(sval, electron_vbf_combined)
       sval = addSyst(sval, [])
       f.write("%s\n"%sval)
 
@@ -237,6 +282,8 @@ def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False, m
       f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('QCDscale_qqH','lnN','-','1.005','-'))
       f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('QCDscale_ggH_ACCEPT','lnN', str(round(1+QCDscale_ggH,3)),'-','-'))
       f.write('%-35s  %-20s    %-25s %-25s %-25s\n'%('QCDscale_qqH_ACCEPT','lnN','-',str(round(1+QCDscale_qqH,3)),'-'))
+      systable[cat]['QCDacc_gg'] = round(QCDscale_ggH*100,3)
+      systable[cat]['QCDacc_vbf'] = round(QCDscale_qqH*100,3)
     
       f.write('CMS_hem_nuisance_scale_m_ggH    param  0  1\n')
       f.write('CMS_hem_nuisance_res_m_ggH      param  0  1\n')
@@ -283,6 +330,9 @@ def writedatacard(cats, bins, df_gg_full, df_vbf_full, sys_=True, limit=False, m
 #          f.write('CMS_hem_nuisance_res_m_%s_%s      param  0  %.3f\n'%(cat, proc2, max(abs(float(shapeSys[proccatMER+'_Up'])), abs(float(shapeSys[proccatMER+'_Down'])))))
 #        else:
 #          f.write('CMS_hem_nuisance_res_m_%s_%s    param  0  %.3f\n'%(cat, proc2, 0.001))
-    else:
+    elif False:
       f.write('pdfindex_' +cat.split('_')[0]+'_13TeV    discrete\n')
+    f_systable = open('ShapeSys/systable.txt', 'a')
+    f_systable.write(str(cats))
+    f_systable.write(str(systable))
 #signalMultiplier rateParam * *LFV 0.01\nnuisance edit freeze signalMultiplier\n') 

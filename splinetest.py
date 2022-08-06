@@ -1,5 +1,6 @@
 import ROOT as r
 import numpy as np
+import math
 r.gROOT.SetBatch(True)
 
 def newCan():
@@ -90,9 +91,9 @@ def frameformat(frame, mh=False):
   frame.GetYaxis().SetTitleOffset(1.4);
   frame.GetXaxis().SetTitleOffset(1.2);
 
-masspts = np.array([120., 125., 130.])
-totalnu = {120.:0, 125.:0, 130.:0}
-for cat in ['ggcat0', 'ggcat1', 'ggcat2', 'ggcat3', 'vbfcat0', 'vbfcat1']:
+masspts = np.array([110., 120., 125., 130., 140., 150., 160.])
+totalnu = {mpt:0 for mpt in masspts}
+for cat in ['ggcat0', 'ggcat1', 'ggcat2', 'ggcat3', 'vbfcat0', 'vbfcat1', 'vbfcat2']:
   inws = r.TFile('Workspaces/workspace_sig_%s.root'%cat).Get('w_13TeV')
   mh = inws.var('MH')
   mh.setRange("fullRange", masspts[0], masspts[-1])
@@ -103,10 +104,10 @@ for cat in ['ggcat0', 'ggcat1', 'ggcat2', 'ggcat3', 'vbfcat0', 'vbfcat1']:
     plot = emumass.frame(100,170,70)
     frameformat(plot)
     canv = newCan()
-    for mp, cr in zip(masspts, [r.kRed, r.kBlue, r.kGreen, r.kMagenta, r.kYellow, r.kOrange, r.kCyan]): 
+    for mp, cr in zip(masspts, [r.kRed, r.kOrange+1, r.kPink-9, r.kBlue, r.kGreen+4, r.kGreen, r.kMagenta, r.kCyan-7]): 
       dh = inws.data('data_%s_%s_%s'%(cat,str(int(mp)),prod))
       mh.setVal(mp)
-      dh.plotOn(plot, r.RooFit.Binning(50,110,160), r.RooFit.LineColor(cr), r.RooFit.MarkerColor(cr))
+      dh.plotOn(plot, r.RooFit.Binning(90,90,180), r.RooFit.LineColor(cr), r.RooFit.MarkerColor(cr))
       pdf.plotOn(plot, r.RooFit.Normalization(inws.function('%s_%s_pdf_norm'%(cat,prod)).getVal()*100, r.RooAbsReal.NumEvent), r.RooFit.LineColor(cr), r.RooFit.LineWidth(2))
       print dh.sumEntries(), inws.function('%s_%s_pdf_norm'%(cat,prod)).getVal()
       totalnu[mp] += dh.sumEntries()
@@ -120,7 +121,7 @@ for cat in ['ggcat0', 'ggcat1', 'ggcat2', 'ggcat3', 'vbfcat0', 'vbfcat1']:
     cattxt.Draw('Same')
     pretxt.Draw('Same')
     canv.Update()
-    canv.SaveAs('Graphs/splines/splinepdf/%s_%s_pdf.png'%(cat,prod))
+    canv.SaveAs('Graphs/splines_cbe/pdfs/%s_%s_pdf.png'%(cat,prod))
     
     for spline_name in ['%s_%s_sigma_cbe_nom'%(cat,prod), '%s_%s_mean_cbe_nom'%(cat,prod), '%s_%s_pdf_norm'%(cat,prod), '%s_%s_n1'%(cat,prod), '%s_%s_a1'%(cat,prod), '%s_%s_a2'%(cat,prod)]:
       mean_spline = inws.function(spline_name)
@@ -130,7 +131,12 @@ for cat in ['ggcat0', 'ggcat1', 'ggcat2', 'ggcat3', 'vbfcat0', 'vbfcat1']:
         mh.setVal(mt)
         ori_pt.append(mean_spline.getVal())
       
-      gr = r.TGraph(len(masspts),masspts,np.array(ori_pt))
+      inws_errs = [r.TFile('Workspaces/workspace_sig_%s_%i.root'%(cat,int(ii))).Get('w_13TeV') for ii in masspts]
+      if 'norm' in spline_name:
+        err_ = np.array([0 for ii in ori_pt])
+      else:
+        err_ = np.array([inws_err.var(spline_name.replace(cat,cat+'_'+str(int(ii)))).getError() for inws_err,ii in zip(inws_errs,masspts)])
+      gr = r.TGraphErrors(len(masspts),masspts,np.array(ori_pt),r.nullptr,err_)
       
       plot = mh.frame(r.RooFit.Title(" "))
       if 'norm' in spline_name:
@@ -147,7 +153,9 @@ for cat in ['ggcat0', 'ggcat1', 'ggcat2', 'ggcat3', 'vbfcat0', 'vbfcat1']:
         plot.SetYTitle("a_{R}")
       frameformat(plot)
       mean_spline.plotOn(plot, r.RooFit.Range("fullRange",r.kFALSE))
-      plot.SetAxisRange(min(ori_pt)*0.8, max(ori_pt)*1.2, "Y")
+      min_max1 = [ii+jj for ii,jj in zip(err_,ori_pt)]
+      min_max2 = [jj-ii for ii,jj in zip(err_,ori_pt)]
+      plot.SetAxisRange(min(min_max2)*0.8, max(min_max1)*1.2, "Y")
       plot.SetAxisRange(masspts[0]-5, masspts[-1]+5, "X")
       canv = newCan()
       plot.Draw()
@@ -161,5 +169,5 @@ for cat in ['ggcat0', 'ggcat1', 'ggcat2', 'ggcat3', 'vbfcat0', 'vbfcat1']:
       pretxt.Draw('Same')
       canv.Update()
       canv.Update()
-      canv.SaveAs('Graphs/splines/'+spline_name+'.png')
+      canv.SaveAs('Graphs/splines_cbe/params/'+spline_name+'.png')
 print totalnu

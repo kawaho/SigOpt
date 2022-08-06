@@ -1,7 +1,7 @@
 def smallUnc(val, name=''):
-  print name, val, round(val,3), abs(round(val,3)-1.)
-  if round(abs(round(val,3)-1.),3)<=0.001:
-    print 'small'
+  #print name, val, round(val,3), abs(round(val,3)-1.)
+  if round(abs(val-1.),3)<=0.001:
+    #print 'small'
     return True
   else:
     return False
@@ -34,8 +34,8 @@ def calmigration(df):
   jetUnc = ['jesAbsolute', 'jesBBEC1', 'jesFlavorQCD', 'jesEC2', 'jesHF', 'jesRelativeBal', 'UnclusteredEn']
   jetyearUnc = sum([['jer_'+year, 'jesAbsolute_'+year, 'jesBBEC1_'+year, 'jesEC2_'+year, 'jesHF_'+year, 'jesRelativeSample_'+year] for year in ['2017', '2018', '2016']], [])
   sfUnc = sum([['pu_'+year, 'bTag_'+year] for year in ['2017', '2018', '2016']], [])
-  sfUnc += ['pf_2016', 'pf_2017', 'mID', 'mIso', 'mTrg', 'eReco', 'eID']
-  leptonUnc = ['me', 'ees', 'eer']
+  sfUnc += ['pf_2016', 'pf_2017', 'mID', 'mIso', 'mTrg', 'eReco', 'eID', 'eIso', 'eTrig']
+  leptonUnc = ['me', 'ess']
   sys = jetUnc+jetyearUnc+sfUnc+leptonUnc
 
   #Get nomial weight

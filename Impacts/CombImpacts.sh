@@ -4,13 +4,13 @@ i="comb"
 echo ${i}
 export cat=${i}
 combineTool.py -M T2W -i ../Datacards/datacard_${i}_125.txt -o datacard_$i.root --parallel 4 -m 125
-combineTool.py -M Impacts -d ../Datacards/datacard_$i.root -m 125 --doInitialFit -P r --rMin=0.9 --rMax=1.1 -t -1 --expectSignal=1 --parallel 16 --freezeParameters MH --setParameters MH=125 --robustFit 1
-combineTool.py -M Impacts -d ../Datacards/datacard_$i.root -m 125 --doFits -t -1 --expectSignal=1 --parallel 16 --rMin=0.9 --rMax=1.1 --freezeParameters MH --setParameters MH=125 --robustFit 1
+combineTool.py -M Impacts -d ../Datacards/datacard_$i.root -m 125 --doInitialFit -P r --rMin=0.5 --rMax=1.5 -t -1 --expectSignal=1 --parallel 16 --freezeParameters MH --setParameters MH=125 --robustFit 1
+combineTool.py -M Impacts -d ../Datacards/datacard_$i.root -m 125 --doFits -t -1 --expectSignal=1 --parallel 16 --rMin=0.5 --rMax=1.5 --freezeParameters MH --setParameters MH=125 --robustFit 1
 #--autoBoundsPOIs r
 #--rMin=$lower --rMax=$upper
 #--robustFit 1
 combineTool.py -M Impacts -d ../Datacards/datacard_$i.root -m 125 -o impacts_$i.json -t -1 --expectSignal=1 --freezeParameters MH --setParameters MH=125
-plotImpacts.py -i impacts_$i.json -o impacts_$i
+plotImpacts.py -i impacts_$i.json -o impacts_${i}_mpt15_ept20
 mkdir -p $i
 mv *.root *.json *.pdf $i
 mkdir -p results

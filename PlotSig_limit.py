@@ -28,7 +28,7 @@ parser.add_argument(
     "--expectedSig",
     action="store",
     dest="exSig",
-    default=0.0059,
+    default=0.59,
     help="Expected Signal Strength")
 
 args = parser.parse_args()
@@ -97,7 +97,7 @@ def PlotSig(Multigr, Sigx, Sigy, canvas, lim=False):
    gPad.SetFrameBorderMode(0)
    gPad.SetFrameBorderSize(10)
    gr = TGraph(len(Sigx), Sigx, Sigy)
-   gr.GetXaxis().SetTitle("BDT Signal Efficiency")
+   gr.GetXaxis().SetTitle("BDT Discriminant")
    if lim:
      gr.GetYaxis().SetTitle("95% CL Expected Limit, 10^{-4}")
    else:
@@ -124,8 +124,8 @@ def PlotSig(Multigr, Sigx, Sigy, canvas, lim=False):
 def PlotCat(Multigr, catsSig, ymax_):
   for cat in catsSig:
     line = TGraph(2)
-    line.SetPoint(0, 1-cat/100., 0)
-    line.SetPoint(1, 1-cat/100., ymax_)
+    line.SetPoint(0, cat/100., 0)
+    line.SetPoint(1, cat/100., ymax_)
     Multigr.Add(line, 'l')
     line.SetLineWidth(3)
 
@@ -147,9 +147,9 @@ def DrawNSave(Multigr, ncats, canvas, lim=False):
   l3 = add_Preliminary()
   l3.Draw("same")
   if lim:
-    canvas.SaveAs('Graphs/' + args.bkg + '_' + str(ncats) + '_' + str(args.exSig) + '_' + args.cat + '_limit.png')
+    canvas.SaveAs('Graphs/' + args.bkg + '_' + str(ncats) + '_' + str(args.exSig) + '_' + args.cat + '_limit_check.png')
   else:
-    canvas.SaveAs('Graphs/' + args.bkg + '_' + str(ncats) + '_' + str(args.exSig) + '_' + args.cat + '.png')
+    canvas.SaveAs('Graphs/' + args.bkg + '_' + str(ncats) + '_' + str(args.exSig) + '_' + args.cat + '_check.png')
 
 class hitCat(Exception): pass
 
@@ -174,16 +174,16 @@ maxComb = 0
 minLim = 0
 maxI = [-1,-1,-1]
 maxSigI = -1
-fResults = open('ScanResult_'+args.bkg+'_'+str(args.exSig)+'_'+str(args.cat)+'_corrected.txt', 'w')
+fResults = open('ScanResult_'+args.bkg+'_'+str(args.exSig)+'_'+str(args.cat)+'_corrected_check_sys.txt', 'w')
 
 #read the csv files to pd for quick systematics calculations as well as root files where ws for signal/data is saved
 if args.cat=='gg':
-  df_gg_full, df_vbf_full = pd.read_csv('inputs/GG_GGcat.csv', index_col='quantiles'), pd.read_csv('inputs/VBF_GGcat.csv', index_col='quantiles')
-  file_gg_full, file_vbf_full = TFile('inputs/GG_GGcat.root').Get("CMS_emu_workspace"), TFile('inputs/VBF_GGcat.root').Get("CMS_emu_workspace")
+  df_gg_full, df_vbf_full = pd.read_csv('inputs/GG_GGcat_125.csv', index_col='quantiles'), pd.read_csv('inputs/VBF_GGcat_125.csv', index_col='quantiles')
+  file_gg_full, file_vbf_full = TFile('inputs/GG_GGcat_125.root').Get("CMS_emu_workspace"), TFile('inputs/VBF_GGcat_125.root').Get("CMS_emu_workspace")
   file_data_full = TFile('inputs/GGcat.root').Get("CMS_emu_workspace")
 else:
-  df_gg_full, df_vbf_full = pd.read_csv('inputs/GG_VBFcat.csv', index_col='quantiles'), pd.read_csv('inputs/VBF_VBFcat.csv', index_col='quantiles')
-  file_gg_full, file_vbf_full = TFile('inputs/GG_VBFcat.root').Get("CMS_emu_workspace"), TFile('inputs/VBF_VBFcat.root').Get("CMS_emu_workspace")
+  df_gg_full, df_vbf_full = pd.read_csv('inputs/GG_VBFcat_125.csv', index_col='quantiles'), pd.read_csv('inputs/VBF_VBFcat_125.csv', index_col='quantiles')
+  file_gg_full, file_vbf_full = TFile('inputs/GG_VBFcat_125.root').Get("CMS_emu_workspace"), TFile('inputs/VBF_VBFcat_125.root').Get("CMS_emu_workspace")
   file_data_full = TFile('inputs/VBFcat.root').Get("CMS_emu_workspace")
 #cats = [1, 40, 50, 100] so 1st cat is from 1 to 40, 2nd cat is 40 to 50...etc
 #i is which percentile you scanning
@@ -211,7 +211,7 @@ def SigScan(i):
   fitstatus = 0
 
   for c in range(len(cats)):
-    fitstatus, numofeventb, numofevent = fit(file_data_full, file_gg_full, file_vbf_full, args.bkg, ranges[c], '%scat%i_%i'%(args.cat,c,i))#, False, True, False)
+    fitstatus, numofeventb, numofevent = fit(file_data_full, file_gg_full, file_vbf_full, args.bkg, ranges[c], '%scat%i_%i'%(args.cat,c,i))#, makePlot=True)
     if numofeventb == -1:
       return -1
     catname.append('%scat%i_%i'%(args.cat,c,i))
@@ -229,7 +229,7 @@ def SigScan(i):
     limitTree = input_.Get("limit")
     limitTree.GetEntry(2)
     lim = limitTree.limit*100
-  runCMD("combine -M Significance Datacards/datacard_comb_%i.txt -m 125 -t -1 --expectSignal=%s --name %i"%(i,str(args.exSig),i))
+  runCMD("combine -M Significance Datacards/datacard_comb_%i.txt -m 125 -t -1 --expectSignal=%s --freezeParameters allConstrainedNuisances --name %i"%(i,str(args.exSig),i))
   input_ = TFile("higgsCombine%i.Significance.mH125.root"%i)
   limitTree = input_.Get("limit")
   limitTree.GetEntry(0)
@@ -238,14 +238,14 @@ def SigScan(i):
   #return [i,sig,lim] 
   return [sig,lim,numofeventb,numofevent] 
 #if True:
-#while run < 2:    
+#while run < 3:    
 while run:    
   ncats = len(catdiff) + 2
   Sigx, Sigy, Limy = array.array('f'), array.array('f'), array.array('f')
   Sigx_plot, Sigy_plot, Limy_plot = array.array('f'), array.array('f'), array.array('f')
-  #Comb = []
-  #Comb= SigScan(98)
-  #for k in range(22,23):
+  Comb = []
+  #Comb= SigScan(88)
+  #for k in range(23):
   #  Comb.append(SigScan(k))
   pool = Pool(64)#processes=cpu_count())
   Comb = pool.map(SigScan, range(1,101)) 
@@ -269,23 +269,24 @@ while run:
   #    Comb[i][0] = 0
   fResults.write("%s\n"%str(Comb))
   for i in range(len(Comb)):
+    #if isinstance(Comb[i], list):
+    #  if Comb[i][0] == 0:
+    #    if isinstance(Comb[i-1], list) and isinstance(Comb[i+1], list):  
+    #      Comb[i][0] = (Comb[i-1][0] + Comb[i+1][0])/2
+    #    elif isinstance(Comb[i+1], list):  
+    #      Comb[i][0] = Comb[i+1][0]
+    #    elif isinstance(Comb[i-1], list):  
+    #      Comb[i][0] = Comb[i-1][0]
+    #if Comb[i] == -1 or Comb[i][0] > 5 or Comb[i][0]==0:  
+    #  Sigx.append(i+1)
+    #  Sigy.append(0)
+    #  Limy.append(100)
+    #else:
     if isinstance(Comb[i], list):
-      if Comb[i][0] == 0:
-        if isinstance(Comb[i-1], list) and isinstance(Comb[i+1], list):  
-          Comb[i][0] = (Comb[i-1][0] + Comb[i+1][0])/2
-        elif isinstance(Comb[i+1], list):  
-          Comb[i][0] = Comb[i+1][0]
-        elif isinstance(Comb[i-1], list):  
-          Comb[i][0] = Comb[i-1][0]
-    if Comb[i] == -1 or Comb[i][0] > 5 or Comb[i][0]==0:  
-      Sigx.append(i+1)
-      Sigy.append(0)
-      Limy.append(100)
-    else:
       Sigx.append(i+1)
       Sigy.append(Comb[i][0])
       Limy.append(Comb[i][1])
-      Sigx_plot.append(1-(i+1)/100.)
+      Sigx_plot.append((i+1)/100.)
       Sigy_plot.append(Comb[i][0])
       Limy_plot.append(Comb[i][1])
 
@@ -298,7 +299,8 @@ while run:
     ymax2_ = PlotSig(Multigr2, Sigx_plot, Limy_plot, can2, True)
     PlotCat(Multigr2, cats[1:-1], ymax2_)
 
-  maxComb_idx = np.argmax(Sigy) + 1
+  #maxComb_idx = np.argmax(Sigy)+1
+  maxComb_idx = int(Sigx[np.argmax(Sigy)])
   maxComb = np.max(Sigy)
 
   diff = (maxComb - maxCombprev)/maxCombprev
@@ -307,7 +309,7 @@ while run:
     cats.append(maxComb_idx)
     cats.sort()
     ranges = [[] for i in cats]
-    PlotMax(Multigr, 1-maxComb_idx/100., ymax_)
+    PlotMax(Multigr, maxComb_idx/100., ymax_)
     DrawNSave(Multigr, ncats, can)
     
     if args.limit:

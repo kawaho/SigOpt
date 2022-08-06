@@ -48,8 +48,6 @@ frame2.Draw()
 frame.Draw('same')
 leg1.Draw('same')
 
-
-
 print(frame.chiSquare(1))
 canvas.SaveAs('test1.png')
 
