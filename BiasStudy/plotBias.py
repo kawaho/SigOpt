@@ -1,16 +1,16 @@
 import ROOT, re, os
 from datetime import datetime
+from runBiasStudy_condor import cats, orders 
 if not os.path.exists('BiasPlot'):
   os.makedirs('BiasPlot')
 ROOT.gSystem.Load("libHiggsAnalysisCombinedLimit.so");
 ROOT.gROOT.SetBatch(True)
-cats = ['ggcat2']#,'ggcat1','ggcat2','ggcat3','vbfcat0','vbfcat1']
-orders = [[2,1,1]]#,[2,1,1],[3,1,1],[3,1,1],[1,1,1],[1,1,1]]
 
 bkgfile = ROOT.TFile('../Workspaces/CMS_Hemu_13TeV_multipdf.root')
 bkgWS = bkgfile.Get('multipdf')
 #outRoot = ROOT.TFile("hist_bias_study.root","RECREATE")
 for cat,order in zip(cats,orders):
+  if cat!='VBFcat0': continue 
   outfile = open(cat+'BiasStudy.txt','a', buffering=0) 
   outfile.write("%s\n"%str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
   multipdf = bkgWS.pdf('CMS_hemu_'+cat+'_13TeV_bkgshape')
@@ -21,9 +21,6 @@ for cat,order in zip(cats,orders):
     pdfname = multipdf.getPdf(i).GetName()
     split_string = pdfname.split("_")
     biasTable[split_string[3]] = [[True],[]]
-  for i in range(numofpdfcat):
-    pdfname = multipdf.getPdf(i).GetName()
-    split_string = pdfname.split("_")
     if 'bern' in pdfname and not 'bern%i'%order[0] in pdfname: continue
     if 'exp' in pdfname and not 'exp%i'%order[1] in pdfname: continue
     #if 'lau' in pdfname and not 'lau%i'%order[2] in pdfname: continue
@@ -32,13 +29,13 @@ for cat,order in zip(cats,orders):
       pdfname2 = multipdf.getPdf(j).GetName()
       split_string2 = pdfname2.split("_")
       print "Scanning fitDiagnosticsGen"+split_string[3]+"Fit"+split_string2[3]+".root"
-      file_ = ROOT.TFile("fitDiagnosticsGen"+split_string[3]+"Fit"+split_string2[3]+cat+".root")
+      file_ = ROOT.TFile("fitDiagnosticsGen"+split_string[3]+"Fit"+split_string2[3]+cat+"_125.root")
       tree = file_.Get("tree_fit_sb")
       if not tree: 
         print "Fit Failed: Gen"+split_string[3]+"Fit"+split_string2[3]
         outfile.write(cat + " " + split_string[3] + " " + split_string2[3] +" is missing\n")
         continue
-      tree.Draw("(r-0.01)/(0.5*(rHiErr+rLoErr))>>h(100,-5,5)")
+      tree.Draw("(r-1)/(0.5*(rHiErr+rLoErr))>>h(100,-5,5)")
       h = ROOT.gPad.GetPrimitive("h")
       h.Fit("gaus")
       try:

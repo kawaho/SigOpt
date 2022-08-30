@@ -1,3 +1,7 @@
+GoF/nul
+GoF/1*
+*.sub
+*.err
 *pdf
 *Gen*
 *.out

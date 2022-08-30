@@ -1,50 +1,62 @@
 import ROOT
-import os
+import os, argparse
 from datetime import datetime
 ROOT.gSystem.Load("libHiggsAnalysisCombinedLimit.so");
 ROOT.gROOT.SetBatch(True)
-cats = ['ggcat2']
-orders = [[2,1,1]]
+cats = ['ggHcat0','ggHcat1','ggHcat2','ggHcat3','VBFcat0','VBFcat1']
+orders = [[3,1,1],[2,1,1],[2,1,1],[2,1,1],[1,1,1],[1,1,1]]
 
 def run(cmd):
   print "%s\n\n"%cmd
   os.system(cmd)
 
-bkgfile = ROOT.TFile('../Workspaces/CMS_Hemu_13TeV_multipdf.root')
-bkgWS = bkgfile.Get('multipdf')
-mass = bkgWS.var("CMS_emu_Mass") 
-for (cat,order) in zip(cats,orders):
-  multipdf = bkgWS.pdf('CMS_hemu_'+cat+'_13TeV_bkgshape')
-  numofpdfcat = multipdf.getNumPdfs()
-  frozen = []
-  for i in range(numofpdfcat):
-    pdfname = multipdf.getPdf(i).GetName()
-    sets = multipdf.getPdf(i).getParameters(ROOT.RooArgSet(mass))
-    frozen += sets.contentsString().split(",")
-  for i in range(numofpdfcat):
-    pdfname = multipdf.getPdf(i).GetName()
-    split_string = pdfname.split("_")
-    if cat=='ggcat0' and not 'bern' in pdfname: continue
-    if cat=='ggcat1' and 'pow' in pdfname: continue
-    if 'bern' in pdfname and not 'bern%i'%order[0] in pdfname: continue
-    if 'exp' in pdfname and not 'exp%i'%order[1] in pdfname: continue
-#    if 'lau' in pdfname and not 'lau%i'%order[2] in pdfname: continue
-    if 'pow' in pdfname and not 'pow%i'%order[2] in pdfname: continue
-    frozenstr = ''
-    for fn in frozen:
-      if not pdfname in fn:
-        frozenstr += ","+fn
-    Gen = "combine ../Datacards/datacard_" + cat + "_NoSys.txt -M GenerateOnly --setParameters pdfindex_" + cat + "_13TeV="+str(i)+" --toysNoSystematics -t 2000 --expectSignal 0.01 --saveToys -m 125 --freezeParameters pdfindex_" + cat + "_13TeV"+frozenstr+" --name "+split_string[3]+cat
-    run(Gen)
-    for j in range(numofpdfcat):
-      pdfname2 = multipdf.getPdf(j).GetName()
-      if not 'bern' in pdfname2: continue
-      split_string2 = pdfname2.split("_")
+if __name__ == '__main__':
+  parser = argparse.ArgumentParser(
+      "Bias Study for LFV H analysis")
+  parser.add_argument(
+      "-m",
+      action="store",
+      default=125,
+      type=int,
+      help="mass point")
+  
+  args = parser.parse_args()
+  
+  bkgfile = ROOT.TFile('../Workspaces/CMS_Hemu_13TeV_multipdf_v2025.root')
+  bkgWS = bkgfile.Get('multipdf')
+  mass = bkgWS.var("CMS_emu_Mass") 
+  for (cat,order) in zip(cats,orders):
+    if cat!='VBFcat0': continue 
+    multipdf = bkgWS.pdf('CMS_hemu_'+cat+'_13TeV_bkgshape')
+    numofpdfcat = multipdf.getNumPdfs()
+    frozen = []
+    for i in range(numofpdfcat):
+      pdfname = multipdf.getPdf(i).GetName()
+      sets = multipdf.getPdf(i).getParameters(ROOT.RooArgSet(mass))
+      frozen += sets.contentsString().split(",")
+    for i in range(numofpdfcat):
+      pdfname = multipdf.getPdf(i).GetName()
+      split_string = pdfname.split("_")
+  #    if cat=='ggcat0' and not 'bern' in pdfname: continue
+  #    if not 'exp' in pdfname: continue
+      if 'bern' in pdfname and not 'bern%i'%order[0] in pdfname: continue
+      if 'exp' in pdfname and not 'exp%i'%order[1] in pdfname: continue
+  #    if 'lau' in pdfname and not 'lau%i'%order[2] in pdfname: continue
+      if 'pow' in pdfname and not 'pow%i'%order[2] in pdfname: continue
       frozenstr = ''
       for fn in frozen:
-        if not pdfname2 in fn:
+        if not pdfname in fn:
           frozenstr += ","+fn
-#      Fit = "combine ../Datacards/datacard_" + cat + "_NoSys.txt -M FitDiagnostics --setParameters pdfindex_" + cat +"_13TeV="+str(j)+" --toysFile higgsCombine"+split_string[3]+cat+".GenerateOnly.mH125.123456.root  -t 10 -m 125 --rMin -5 --rMax 5 --freezeParameters pdfindex_" + cat + "_13TeV"+frozenstr+" --cminDefaultMinimizerStrategy=0 -v 3 --name Gen"+split_string[3]+"Fit"+split_string2[3]+cat
-      Fit = "combineTool.py --job-mode condor --sub-opts=\'+JobFlavour=\"longlunch\"\' --task-name Gen"+split_string[3]+"Fit"+split_string2[3] + cat + " ../Datacards/datacard_" + cat + "_NoSys.txt -M FitDiagnostics --setParameters pdfindex_" + cat +"_13TeV="+str(j)+" --toysFile higgsCombine"+split_string[3]+cat+".GenerateOnly.mH125.123456.root  -t 2000 -m 125 --rMin -0.05 --rMax 0.05 --freezeParameters pdfindex_" + cat + "_13TeV"+frozenstr+" --cminDefaultMinimizerStrategy=0 --name Gen"+split_string[3]+"Fit"+split_string2[3]+cat
-      #Fit = "combineTool.py --job-mode crab3 --custom-crab custom_crab.py --task-name Gen"+split_string[3]+"Fit"+split_string2[3] + cat + " -d ../Datacards/datacard_" + cat + "_NoSys.txt -M FitDiagnostics --setParameters pdfindex_" + cat +"_13TeV="+str(j)+" --toysFile higgsCombine"+split_string[3]+cat+".GenerateOnly.mH125.123456.root  -t 10000 -m 125 --rMin -5 --rMax 5 --freezeParameters pdfindex_" + cat + "_13TeV"+frozenstr+" --cminDefaultMinimizerStrategy=0 -v 3 --name Gen"+split_string[3]+"Fit"+split_string2[3]+cat
-      run(Fit) 
+      Gen = "combine ../Datacards/datacard_" + cat + "_"+str(args.m)+"_NoSys.txt -M GenerateOnly --setParameters pdfindex_" + cat + "_13TeV="+str(i)+" --toysNoSystematics -t 2000 --expectSignal 1 --saveToys -m 125 --freezeParameters pdfindex_" + cat + "_13TeV"+frozenstr+" --name "+split_string[3]+cat+'_'+str(args.m)
+      run(Gen)
+      for j in range(numofpdfcat):
+        pdfname2 = multipdf.getPdf(j).GetName()
+        split_string2 = pdfname2.split("_")
+        frozenstr = ''
+        for fn in frozen:
+          if not pdfname2 in fn:
+            frozenstr += ","+fn
+  #      Fit = "combine ../Datacards/datacard_" + cat + "_NoSys.txt -M FitDiagnostics --setParameters pdfindex_" + cat +"_13TeV="+str(j)+" --toysFile higgsCombine"+split_string[3]+cat+".GenerateOnly.mH125.123456.root  -t 10 -m 125 --rMin -5 --rMax 5 --freezeParameters pdfindex_" + cat + "_13TeV"+frozenstr+" --cminDefaultMinimizerStrategy=0 -v 3 --name Gen"+split_string[3]+"Fit"+split_string2[3]+cat
+        Fit = "combineTool.py --job-mode condor --sub-opts=\'+JobFlavour=\"longlunch\"\' --task-name Gen"+split_string[3]+"Fit"+split_string2[3] + cat + "_"+str(args.m)+ " ../Datacards/datacard_" + cat + "_"+str(args.m)+ "_NoSys.txt -M FitDiagnostics --setParameters pdfindex_" + cat +"_13TeV="+str(j)+" --toysFile higgsCombine"+split_string[3]+cat+'_'+str(args.m)+".GenerateOnly.mH125.123456.root  -t 2000 -m 125 --rMin -10 --rMax 10 --freezeParameters pdfindex_" + cat + "_13TeV"+frozenstr+" --cminDefaultMinimizerStrategy=0 --name Gen"+split_string[3]+"Fit"+split_string2[3]+cat+"_"+str(args.m)
+        #Fit = "combineTool.py --job-mode crab3 --custom-crab custom_crab.py --task-name Gen"+split_string[3]+"Fit"+split_string2[3] + cat + " -d ../Datacards/datacard_" + cat + "_NoSys.txt -M FitDiagnostics --setParameters pdfindex_" + cat +"_13TeV="+str(j)+" --toysFile higgsCombine"+split_string[3]+cat+".GenerateOnly.mH125.123456.root  -t 10000 -m 125 --rMin -5 --rMax 5 --freezeParameters pdfindex_" + cat + "_13TeV"+frozenstr+" --cminDefaultMinimizerStrategy=0 -v 3 --name Gen"+split_string[3]+"Fit"+split_string2[3]+cat
+        run(Fit) 
